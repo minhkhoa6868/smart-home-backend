@@ -14,10 +14,22 @@ public class MqttPublisherService {
     }
 
     public void publishCommand(String topic, String payload) throws MqttException {
-        MqttMessage message = new MqttMessage(payload.getBytes());
-        message.setQos(1);
+        try {
+            if (!mqttClient.isConnected()) {
+                System.err.println("MQTT Client is not connected. Reconnecting...");
+                mqttClient.reconnect();
+            }
 
-        mqttClient.publish(topic, message);
-        System.out.println("Sent to device: " + topic + " -> " + payload);
+            MqttMessage message = new MqttMessage(payload.getBytes());
+            message.setQos(1);
+            message.setRetained(false);
+
+            mqttClient.publish(topic, message);
+            System.out.println("Sent to device: " + topic + " -> " + payload);
+
+        } catch (MqttException e) {
+            System.err.println("Failed to publish message to topic " + topic + ": " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

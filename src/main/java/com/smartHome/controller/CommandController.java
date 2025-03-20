@@ -26,7 +26,7 @@ public class CommandController {
     public ResponseEntity<FanCommand> sendFanCommand(@RequestBody FanCommand command) throws Exception {
         Long deviceId = command.getDevice().getDeviceId();
         Integer speed = command.getSpeed();
-        FanCommand newCommand = commandService.handleCreateFanCommand(deviceId, speed, "");
+        FanCommand newCommand = commandService.handleCreateFanCommand(deviceId, speed, "itsmejoanro/feeds/bbc-fan");
 
         return ResponseEntity.status(HttpStatus.CREATED).body(newCommand);
     }
@@ -35,7 +35,7 @@ public class CommandController {
     public ResponseEntity<DoorCommand> sendDoorCommand(@RequestBody DoorCommand command) throws Exception {
         Long deviceId = command.getDevice().getDeviceId();
         String status = command.getStatus();
-        DoorCommand newCommand = commandService.handleCreateDoorCommand(deviceId, status, "");
+        DoorCommand newCommand = commandService.handleCreateDoorCommand(deviceId, status, "itsmejoanro/feeds/bbc-door");
 
         return ResponseEntity.status(HttpStatus.CREATED).body(newCommand);
     }
@@ -44,7 +44,8 @@ public class CommandController {
     public ResponseEntity<LightCommand> sendLightColorCommand(@RequestBody LightCommand command) throws Exception {
         Long deviceId = command.getDevice().getDeviceId();
         String color = command.getColor();
-        LightCommand newCommand = commandService.handleCreateLightColorCommand(deviceId, color, "");
+        String status = command.getStatus();
+        LightCommand newCommand = commandService.handleCreateLightColorCommand(deviceId, color, status, "");
 
         return ResponseEntity.status(HttpStatus.CREATED).body(newCommand);
     }
@@ -53,7 +54,7 @@ public class CommandController {
     public ResponseEntity<LightCommand> sendLightStatusCommand(@RequestBody LightCommand command) throws Exception {
         Long deviceId = command.getDevice().getDeviceId();
         String status = command.getStatus();
-        LightCommand newCommand = commandService.handleCreateLightStatusCommand(deviceId, status, "");
+        LightCommand newCommand = commandService.handleCreateLightStatusCommand(deviceId, status, "itsmejoanro/feeds/bbc-led");
 
         return ResponseEntity.status(HttpStatus.CREATED).body(newCommand);
     }

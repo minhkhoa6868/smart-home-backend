@@ -37,8 +37,7 @@ public class MqttSubscriberService {
         try {
             if (!mqttClient.isConnected()) {
                 System.err.println("MQTT Client is not connected!");
-                // Optionally: Attempt reconnect
-                mqttClient.connect();
+                mqttClient.reconnect();
                 System.out.println("Reconnected MQTT client!");
             }
     

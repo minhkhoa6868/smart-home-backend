@@ -65,9 +65,13 @@ public class CommandService {
     }
 
     // light color command
-    public LightCommand handleCreateLightColorCommand(Long deviceId, String color, String topic) throws MqttException {     
+    public LightCommand handleCreateLightColorCommand(Long deviceId, String color, String status, String topic) throws MqttException {     
         Device device = deviceRepository.findById(deviceId)
             .orElseThrow(() -> new RuntimeException("Device not found!"));
+
+        if (status == "OFF"){
+            throw new RuntimeException("Light is off!");
+        }
 
         // publish fan command over MQTT
         mqttPublisherService.publishCommand(topic, color);
@@ -77,7 +81,7 @@ public class CommandService {
         command.setDevice(device);
         command.setTimestamp(LocalDateTime.now());
         command.setColor(color);
-        command.setStatus(null);
+        command.setStatus(status);
 
         return lightCommandRepository.save(command);
     }
