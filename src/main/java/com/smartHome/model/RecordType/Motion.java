@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "motion_records")
 @Getter
 @Setter
 @DiscriminatorValue("MOTION")

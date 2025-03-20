@@ -12,12 +12,8 @@ import lombok.Setter;
 @Setter
 @DiscriminatorValue("LIGHTCOMMAND")
 public class LightCommand extends Command {
-    public enum Color {
-        red, blue, green
-    }
-
     @Column(nullable = false)
-    private Color color;
+    private String color;
 
     @Column(columnDefinition = "VARCHAR(10)", nullable = false)
     private String status;

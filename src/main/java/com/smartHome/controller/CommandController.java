@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.smartHome.model.CommandType.DoorCommand;
 import com.smartHome.model.CommandType.FanCommand;
 import com.smartHome.model.CommandType.LightCommand;
-import com.smartHome.model.CommandType.LightCommand.Color;
 import com.smartHome.service.CommandService;
 import org.springframework.web.bind.annotation.PostMapping;
 
@@ -25,28 +24,36 @@ public class CommandController {
 
     @PostMapping("/fan")
     public ResponseEntity<FanCommand> sendFanCommand(@RequestBody FanCommand command) throws Exception {
-        Long deviceId = command.getDevice().getDevice_id();
+        Long deviceId = command.getDevice().getDeviceId();
         Integer speed = command.getSpeed();
-        FanCommand newCommand = commandService.handleCreateFanCommand(deviceId, speed);
+        FanCommand newCommand = commandService.handleCreateFanCommand(deviceId, speed, "");
 
         return ResponseEntity.status(HttpStatus.CREATED).body(newCommand);
     }
 
     @PostMapping("/door")
     public ResponseEntity<DoorCommand> sendDoorCommand(@RequestBody DoorCommand command) throws Exception {
-        Long deviceId = command.getDevice().getDevice_id();
+        Long deviceId = command.getDevice().getDeviceId();
         String status = command.getStatus();
-        DoorCommand newCommand = commandService.handleCreateDoorCommand(deviceId, status);
+        DoorCommand newCommand = commandService.handleCreateDoorCommand(deviceId, status, "");
 
         return ResponseEntity.status(HttpStatus.CREATED).body(newCommand);
     }
 
-    @PostMapping("/light")
-    public ResponseEntity<LightCommand> sendCommand(@RequestBody LightCommand command) throws Exception {
-        Long deviceId = command.getDevice().getDevice_id();
-        Color color = command.getColor();
+    @PostMapping("/light/color")
+    public ResponseEntity<LightCommand> sendLightColorCommand(@RequestBody LightCommand command) throws Exception {
+        Long deviceId = command.getDevice().getDeviceId();
+        String color = command.getColor();
+        LightCommand newCommand = commandService.handleCreateLightColorCommand(deviceId, color, "");
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(newCommand);
+    }
+
+    @PostMapping("/light/status")
+    public ResponseEntity<LightCommand> sendLightStatusCommand(@RequestBody LightCommand command) throws Exception {
+        Long deviceId = command.getDevice().getDeviceId();
         String status = command.getStatus();
-        LightCommand newCommand = commandService.handleCreateLightCommand(deviceId, color, status);
+        LightCommand newCommand = commandService.handleCreateLightStatusCommand(deviceId, status, "");
 
         return ResponseEntity.status(HttpStatus.CREATED).body(newCommand);
     }
