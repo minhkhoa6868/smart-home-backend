@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "device")
+@Table(name = "commands")
 @Inheritance(strategy = InheritanceType.JOINED)
 @DiscriminatorColumn(name = "command_type")
 @Setter
@@ -21,7 +21,6 @@ public class Command {
     private LocalDateTime timestamp;
 
     @ManyToOne
-    @MapsId("deviceId")
     @JoinColumn(name = "device_id", nullable = false)
     private Device device;
 }

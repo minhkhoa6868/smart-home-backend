@@ -16,7 +16,7 @@ import com.smartHome.model.RecordType.Motion;
 import com.smartHome.model.RecordType.Temperature;
 import com.smartHome.repository.RecordRepository;
 
-import org.eclipse.paho.client.mqttv3.MqttClient;
+import jakarta.annotation.PostConstruct;
 
 @Service
 public class MqttSubscriberService {
@@ -25,21 +25,37 @@ public class MqttSubscriberService {
     private final DeviceRepository deviceRepository;
     private final ObjectMapper objectMapper;
 
-    public MqttSubscriberService(RecordRepository recordRepository, DeviceRepository deviceRepository) throws Exception {
+    public MqttSubscriberService(RecordRepository recordRepository, DeviceRepository deviceRepository, IMqttClient iMqttClient) throws Exception {
         this.recordRepository = recordRepository;
         this.deviceRepository = deviceRepository;
+        this.mqttClient = iMqttClient;
         this.objectMapper = new ObjectMapper();
-        String subscriberId = "spring-boot-subscriber";
-        String brokerUrl = "tcp://localhost:1883";
-
-        mqttClient = new MqttClient(brokerUrl, subscriberId);
-        mqttClient.connect();
-
-        subscribe("device/+/record");
     }
 
-    public void subscribe(String topicFilter) throws Exception {
-        mqttClient.subscribe(topicFilter, (topic, msg) -> {
+    @PostConstruct
+    public void init() throws Exception {
+        try {
+            if (!mqttClient.isConnected()) {
+                System.err.println("MQTT Client is not connected!");
+                // Optionally: Attempt reconnect
+                mqttClient.connect();
+                System.out.println("Reconnected MQTT client!");
+            }
+    
+            System.out.println("Starting subscriptions...");
+            subscribe("itsmejoanro/feeds/bbc-distance");
+            subscribe("itsmejoanro/feeds/bbc-temp");
+            subscribe("itsmejoanro/feeds/bbc-humid");
+            subscribe("itsmejoanro/feeds/bbc-light");
+    
+        } catch (Exception e) {
+            System.err.println("Error in MQTT init: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public void subscribe(String topics) throws Exception {
+        mqttClient.subscribe(topics, (topic,msg) -> {
             String payload = new String(msg.getPayload());
             System.out.println("Received message: " + payload);
 

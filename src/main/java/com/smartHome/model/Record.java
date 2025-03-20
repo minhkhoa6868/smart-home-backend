@@ -21,7 +21,6 @@ public class Record {
     private LocalDateTime timestamp;
 
     @ManyToOne
-    @MapsId("deviceId")
     @JoinColumn(name = "device_id", nullable = false)
     private Device device;
 }

@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "humidity_records")
 @Getter
 @Setter
 @DiscriminatorValue("HUMIDITY")

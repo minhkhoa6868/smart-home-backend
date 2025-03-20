@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "light_records")
 @Getter
 @Setter
 @DiscriminatorValue("LIGHT")
