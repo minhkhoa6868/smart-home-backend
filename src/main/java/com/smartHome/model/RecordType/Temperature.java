@@ -12,5 +12,5 @@ import lombok.Setter;
 @DiscriminatorValue("TEMPERATURE")
 public class Temperature extends Record {
     @Column(nullable = false)
-    private Double temperature;
+    private Float temperature;
 }

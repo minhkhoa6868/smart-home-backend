@@ -13,7 +13,7 @@ import lombok.Setter;
 @DiscriminatorValue("LIGHTCOMMAND")
 public class LightCommand extends Command {
     @Column(nullable = false)
-    private String color;
+    private Integer color;
 
     @Column(columnDefinition = "VARCHAR(10)", nullable = false)
     private String status;

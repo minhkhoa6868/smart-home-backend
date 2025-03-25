@@ -5,14 +5,11 @@ import java.time.LocalDateTime;
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.smartHome.dto.IncommingRecordDTO;
 import com.smartHome.model.Device;
 import com.smartHome.repository.DeviceRepository;
-import com.smartHome.model.Record;
+import com.smartHome.model.RecordType.Distance;
 import com.smartHome.model.RecordType.Humidity;
 import com.smartHome.model.RecordType.Light;
-import com.smartHome.model.RecordType.Motion;
 import com.smartHome.model.RecordType.Temperature;
 import com.smartHome.repository.RecordRepository;
 
@@ -23,13 +20,11 @@ public class MqttSubscriberService {
     private final IMqttClient mqttClient;
     private final RecordRepository recordRepository;
     private final DeviceRepository deviceRepository;
-    private final ObjectMapper objectMapper;
 
     public MqttSubscriberService(RecordRepository recordRepository, DeviceRepository deviceRepository, IMqttClient iMqttClient) throws Exception {
         this.recordRepository = recordRepository;
         this.deviceRepository = deviceRepository;
         this.mqttClient = iMqttClient;
-        this.objectMapper = new ObjectMapper();
     }
 
     @PostConstruct
@@ -56,59 +51,60 @@ public class MqttSubscriberService {
     public void subscribe(String topics) throws Exception {
         mqttClient.subscribe(topics, (topic,msg) -> {
             String payload = new String(msg.getPayload());
-            System.out.println("Received message: " + payload);
+            System.out.println("Received message: " + payload + "from topic" + topics);
 
             try {
-                // You could create a DTO and map it manually, but for simplicity:
-                IncommingRecordDTO incomingRecord = objectMapper.readValue(payload, IncommingRecordDTO.class);
+                Float value = Float.parseFloat(payload);
 
-                // Lookup device if not already attached
-                Device device = deviceRepository.findById(incomingRecord.getDeviceId())
-                        .orElseThrow(() -> new RuntimeException("Device not found"));
+                System.out.println("Value: " + value);    
 
-                Record record = createRecordByType(incomingRecord, device);
+                Device device;
+
+                LocalDateTime timestamp = LocalDateTime.now();
+                switch (topics) {
+                    case "itsmejoanro/feeds/bbc-humid":
+                        device = deviceRepository.findById("DTH-1").orElse(null);
+                        Humidity humidity = new Humidity();
+                        humidity.setDevice(device);
+                        humidity.setTimestamp(timestamp);
+                        humidity.setTemperature(value);
+                        recordRepository.save(humidity);
+                        break;
                 
-                recordRepository.save(record);
+                    case "itsmejoanro/feeds/bbc-temp":
+                        device = deviceRepository.findById("DTH-1").orElse(null);
+                        Temperature temperature = new Temperature();
+                        temperature.setDevice(device);
+                        temperature.setTimestamp(timestamp);
+                        temperature.setTemperature(value);
+                        recordRepository.save(temperature);
+                        break;
+
+                    case "itsmejoanro/feeds/bbc-distance":
+                        device = deviceRepository.findById("DISTANCE-1").orElse(null);
+                        Distance motion = new Distance();
+                        motion.setDevice(device);
+                        motion.setTimestamp(timestamp);
+                        motion.setDistance(value);
+                        recordRepository.save(motion);
+                        break;
+
+                    case "itsmejoanro/feeds/bbc-light":
+                        device = deviceRepository.findById("LIGHT-1").orElse(null);
+                        Light light = new Light();
+                        light.setDevice(device);
+                        light.setTimestamp(timestamp);
+                        light.setBrightness(value);
+                        recordRepository.save(light);
+                        break;
+
+                    default:
+                        throw new Exception("Invalid topic: " + topics);
+                }
+                
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
-    }
-
-    private Record createRecordByType(IncommingRecordDTO incommingRecord, Device device) {
-        LocalDateTime timestamp = incommingRecord.getTimestamp() != null ? incommingRecord.getTimestamp() : LocalDateTime.now();
-        
-        switch (incommingRecord.getRecordType().toUpperCase()) {
-            case "HUMIDITY":
-                Humidity humidity = new Humidity();
-                humidity.setDevice(device);
-                humidity.setTimestamp(timestamp);
-                humidity.setTemperature(incommingRecord.getHumidity());
-                return humidity;
-
-            case "TEMPERATURE":
-                Temperature temperature = new Temperature();
-                temperature.setDevice(device);
-                temperature.setTimestamp(timestamp);
-                temperature.setTemperature(incommingRecord.getTemperature());
-                return temperature;
-
-            case "LIGHT":
-                Light light = new Light();
-                light.setDevice(device);
-                light.setTimestamp(timestamp);
-                light.setBrightness(incommingRecord.getBrightness());
-                return light;
-
-            case "MOTION":
-                Motion motion = new Motion();
-                motion.setDevice(device);
-                motion.setTimestamp(timestamp);
-                motion.setMotion(incommingRecord.getMotion());
-                return motion;
-
-            default:
-                throw new IllegalArgumentException("Unknown record type: " + incommingRecord.getRecordType());
-        }
     }
 }

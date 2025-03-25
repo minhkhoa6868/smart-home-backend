@@ -12,5 +12,5 @@ import lombok.Setter;
 @DiscriminatorValue("HUMIDITY")
 public class Humidity extends Record {
     @Column(nullable = false)
-    private Double temperature;
+    private Float temperature;
 }

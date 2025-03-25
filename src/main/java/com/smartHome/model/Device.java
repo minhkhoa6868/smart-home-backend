@@ -12,8 +12,8 @@ import java.util.Set;
 @Getter
 public class Device {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long deviceId;
+    @Column(columnDefinition = "VARCHAR(10)", nullable = false)
+    private String deviceId;
 
     @Column(columnDefinition = "VARCHAR(255)", nullable = false)
     private String device_name;

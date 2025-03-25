@@ -12,5 +12,5 @@ import lombok.Setter;
 @DiscriminatorValue("LIGHT")
 public class Light extends Record {
     @Column(nullable = false)
-    private Double brightness;
+    private Float brightness;
 }

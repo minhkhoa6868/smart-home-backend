@@ -3,9 +3,9 @@ package com.smartHome.dto;
 import java.time.LocalDateTime;
 
 import com.smartHome.model.Record;
+import com.smartHome.model.RecordType.Distance;
 import com.smartHome.model.RecordType.Humidity;
 import com.smartHome.model.RecordType.Light;
-import com.smartHome.model.RecordType.Motion;
 import com.smartHome.model.RecordType.Temperature;
 
 import lombok.Getter;
@@ -16,10 +16,10 @@ import lombok.Setter;
 public class RecordDTO {
     private Long recordId;
     private LocalDateTime timestamp;
-    private Double humidity;
-    private Double brightness;
-    private Double temperature;
-    private Boolean motion;
+    private Float humidity;
+    private Float brightness;
+    private Float temperature;
+    private Float motion;
 
     public RecordDTO() {}
 
@@ -38,9 +38,9 @@ public class RecordDTO {
             Temperature temperature = (Temperature) record;
             this.temperature = temperature.getTemperature();
         }
-        if (record instanceof Motion) {
-            Motion motion = (Motion) record;
-            this.motion = motion.getMotion();
+        if (record instanceof Distance) {
+            Distance motion = (Distance) record;
+            this.motion = motion.getDistance();
         }
     }
 }

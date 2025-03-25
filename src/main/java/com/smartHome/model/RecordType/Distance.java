@@ -9,8 +9,8 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
-@DiscriminatorValue("MOTION")
-public class Motion extends Record {
+@DiscriminatorValue("DISTANCE")
+public class Distance extends Record {
     @Column(nullable = false)
-    private Boolean motion;
+    private Float distance;
 }

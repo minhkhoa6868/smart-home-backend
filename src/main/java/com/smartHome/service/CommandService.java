@@ -5,6 +5,9 @@ import java.time.LocalDateTime;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.springframework.stereotype.Service;
 
+import com.smartHome.dto.FanCommandDTO;
+import com.smartHome.dto.LightColorCommandDTO;
+import com.smartHome.dto.LightStatusCommandDTO;
 import com.smartHome.model.Device;
 import com.smartHome.model.CommandType.DoorCommand;
 import com.smartHome.model.CommandType.FanCommand;
@@ -21,18 +24,20 @@ public class CommandService {
     private final DoorCommanndRepository doorCommanndRepository;
     private final LightCommandRepository lightCommandRepository;
     private final DeviceRepository deviceRepository;
+    private final DeviceService deviceService;
 
-    public CommandService(MqttPublisherService mqttPublisherService, FanCommandRepository fanCommandRepository, DoorCommanndRepository doorCommanndRepository, LightCommandRepository lightCommandRepository, DeviceRepository deviceRepository) {
+    public CommandService(MqttPublisherService mqttPublisherService, FanCommandRepository fanCommandRepository, DoorCommanndRepository doorCommanndRepository, LightCommandRepository lightCommandRepository, DeviceRepository deviceRepository, DeviceService deviceService) {
         this.mqttPublisherService = mqttPublisherService;
         this.fanCommandRepository = fanCommandRepository;
         this.doorCommanndRepository = doorCommanndRepository;
         this.lightCommandRepository = lightCommandRepository;
         this.deviceRepository = deviceRepository;
+        this.deviceService = deviceService;
     }
 
     // fan command
-    public FanCommand handleCreateFanCommand(Long deviceId, Integer speed, String topic) throws MqttException {
-        Device device = deviceRepository.findById(deviceId)
+    public FanCommandDTO handleCreateFanCommand(Integer speed, String topic) throws MqttException {
+        Device device = deviceRepository.findByDeviceId("FAN-1")
             .orElseThrow(() -> new RuntimeException("Device not found!"));
 
         // publish fan command over MQTT
@@ -43,13 +48,22 @@ public class CommandService {
         command.setDevice(device);
         command.setTimestamp(LocalDateTime.now());
         command.setSpeed(speed);
+        fanCommandRepository.save(command);
 
-        return fanCommandRepository.save(command);
+        if (speed == 0) {
+            deviceService.handleUpdateDeviceStatus("FAN-1", "OFF");
+        }
+
+        else {
+            deviceService.handleUpdateDeviceStatus("FAN-1", "ON");
+        }
+
+        return new FanCommandDTO(command);
     }
 
     // Door command
-    public DoorCommand handleCreateDoorCommand(Long deviceId, String status, String topic) throws MqttException {
-        Device device = deviceRepository.findById(deviceId)
+    public DoorCommand handleCreateDoorCommand(String deviceId, String status, String topic) throws MqttException {
+        Device device = deviceRepository.findByDeviceId(deviceId)
             .orElseThrow(() -> new RuntimeException("Device not found!"));
 
         // publish fan command over MQTT
@@ -65,30 +79,31 @@ public class CommandService {
     }
 
     // light color command
-    public LightCommand handleCreateLightColorCommand(Long deviceId, String color, String status, String topic) throws MqttException {     
-        Device device = deviceRepository.findById(deviceId)
+    public LightColorCommandDTO handleCreateLightColorCommand(Integer color, String topic) throws MqttException {     
+        Device device = deviceRepository.findByDeviceId("LED-1")
             .orElseThrow(() -> new RuntimeException("Device not found!"));
 
-        if (status == "OFF"){
+        if ("OFF".equals(device.getStatus())){
             throw new RuntimeException("Light is off!");
         }
 
         // publish fan command over MQTT
-        mqttPublisherService.publishCommand(topic, color);
+        mqttPublisherService.publishCommand(topic, color.toString());
 
         // save to database
         LightCommand command = new LightCommand();
         command.setDevice(device);
         command.setTimestamp(LocalDateTime.now());
+        command.setStatus("ON");
         command.setColor(color);
-        command.setStatus(status);
+        lightCommandRepository.save(command);
 
-        return lightCommandRepository.save(command);
+        return new LightColorCommandDTO(command);
     }
 
     //  light status command
-    public LightCommand handleCreateLightStatusCommand(Long deviceId, String status, String topic) throws MqttException {
-        Device device = deviceRepository.findById(deviceId)
+    public LightStatusCommandDTO handleCreateLightStatusCommand(String status, String topic) throws MqttException {
+        Device device = deviceRepository.findByDeviceId("LED-1")
             .orElseThrow(() -> new RuntimeException("Device not found!"));
 
         // publish fan command over MQTT
@@ -96,11 +111,52 @@ public class CommandService {
 
         // save to database
         LightCommand command = new LightCommand();
+
+        // if status is on in the first time, it will set default color is one
+        // else it still keep the previous color
+        if ("ON".equals(status)) {
+            if ("ON".equals(device.getStatus())) {
+                throw new RuntimeException("Light is already on!");
+            }
+
+            Integer color = getLatestColor(device);
+
+            if (color == null) {
+                command.setColor(1);
+                mqttPublisherService.publishCommand(topic, "1");
+            }
+
+            else {
+                command.setColor(color);
+                mqttPublisherService.publishCommand(topic, color.toString());
+            }
+        }
+
+        else if ("OFF".equals(status)) {
+            if ("OFF".equals(device.getStatus())) {
+                throw new RuntimeException("Light is already off!");
+            }
+            Integer color = getLatestColor(device);
+            command.setColor(color);
+            mqttPublisherService.publishCommand(topic, "0");
+        }
+
         command.setDevice(device);
         command.setTimestamp(LocalDateTime.now());
-        command.setColor(null);
         command.setStatus(status);
 
-        return lightCommandRepository.save(command);
+        deviceService.handleUpdateDeviceStatus("LED-1", status);
+
+        lightCommandRepository.save(command);
+
+        return new LightStatusCommandDTO(command);
+    }
+
+    // get latest color
+    public Integer getLatestColor(Device device) {
+        return lightCommandRepository
+                .findTopByDeviceOrderByTimestampDesc(device)
+                .map(LightCommand::getColor)
+                .orElse(null); // or throw exception if preferred
     }
 }
