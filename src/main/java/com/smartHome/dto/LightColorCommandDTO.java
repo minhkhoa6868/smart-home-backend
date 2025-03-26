@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class LightColorCommandDTO {
-    private Integer color;
+    private String color;
     private String deviceId;
 
     public LightColorCommandDTO() {}

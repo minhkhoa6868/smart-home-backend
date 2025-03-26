@@ -3,19 +3,25 @@ package com.smartHome.service;
 import java.time.LocalDateTime;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import com.smartHome.dto.DoorCommandDTO;
 import com.smartHome.dto.FanCommandDTO;
 import com.smartHome.dto.LightColorCommandDTO;
 import com.smartHome.dto.LightStatusCommandDTO;
 import com.smartHome.model.Device;
+import com.smartHome.model.UserSetting;
 import com.smartHome.model.CommandType.DoorCommand;
 import com.smartHome.model.CommandType.FanCommand;
 import com.smartHome.model.CommandType.LightCommand;
+import com.smartHome.model.RecordType.Temperature;
 import com.smartHome.repository.DeviceRepository;
 import com.smartHome.repository.DoorCommanndRepository;
 import com.smartHome.repository.FanCommandRepository;
 import com.smartHome.repository.LightCommandRepository;
+import com.smartHome.repository.TemperatureRepository;
+import com.smartHome.repository.UserSettingRepository;
 
 @Service
 public class CommandService {
@@ -25,20 +31,27 @@ public class CommandService {
     private final LightCommandRepository lightCommandRepository;
     private final DeviceRepository deviceRepository;
     private final DeviceService deviceService;
+    private final TemperatureRepository temperatureRepository;
+    private final UserSettingRepository userSettingRepository;
 
-    public CommandService(MqttPublisherService mqttPublisherService, FanCommandRepository fanCommandRepository, DoorCommanndRepository doorCommanndRepository, LightCommandRepository lightCommandRepository, DeviceRepository deviceRepository, DeviceService deviceService) {
+    public CommandService(MqttPublisherService mqttPublisherService, FanCommandRepository fanCommandRepository,
+            DoorCommanndRepository doorCommanndRepository, LightCommandRepository lightCommandRepository,
+            DeviceRepository deviceRepository, DeviceService deviceService, TemperatureRepository temperatureRepository,
+            UserSettingRepository userSettingRepository) {
         this.mqttPublisherService = mqttPublisherService;
         this.fanCommandRepository = fanCommandRepository;
         this.doorCommanndRepository = doorCommanndRepository;
         this.lightCommandRepository = lightCommandRepository;
         this.deviceRepository = deviceRepository;
         this.deviceService = deviceService;
+        this.temperatureRepository = temperatureRepository;
+        this.userSettingRepository = userSettingRepository;
     }
 
     // fan command
     public FanCommandDTO handleCreateFanCommand(Integer speed, String topic) throws MqttException {
         Device device = deviceRepository.findByDeviceId("FAN-1")
-            .orElseThrow(() -> new RuntimeException("Device not found!"));
+                .orElseThrow(() -> new RuntimeException("Device not found!"));
 
         // publish fan command over MQTT
         mqttPublisherService.publishCommand(topic, speed.toString());
@@ -62,9 +75,9 @@ public class CommandService {
     }
 
     // Door command
-    public DoorCommand handleCreateDoorCommand(String deviceId, String status, String topic) throws MqttException {
-        Device device = deviceRepository.findByDeviceId(deviceId)
-            .orElseThrow(() -> new RuntimeException("Device not found!"));
+    public DoorCommandDTO handleCreateDoorCommand(String status, String topic) throws MqttException {
+        Device device = deviceRepository.findByDeviceId("DOOR-1")
+                .orElseThrow(() -> new RuntimeException("Device not found!"));
 
         // publish fan command over MQTT
         mqttPublisherService.publishCommand(topic, status);
@@ -75,20 +88,24 @@ public class CommandService {
         command.setTimestamp(LocalDateTime.now());
         command.setStatus(status);
 
-        return doorCommanndRepository.save(command);
+        // deviceService.handleUpdateDeviceStatus("DOOR-1", status);
+
+        doorCommanndRepository.save(command);
+
+        return new DoorCommandDTO(command);
     }
 
     // light color command
-    public LightColorCommandDTO handleCreateLightColorCommand(Integer color, String topic) throws MqttException {     
+    public LightColorCommandDTO handleCreateLightColorCommand(String color, String topic) throws MqttException {
         Device device = deviceRepository.findByDeviceId("LED-1")
-            .orElseThrow(() -> new RuntimeException("Device not found!"));
+                .orElseThrow(() -> new RuntimeException("Device not found!"));
 
-        if ("OFF".equals(device.getStatus())){
+        if ("OFF".equals(device.getStatus())) {
             throw new RuntimeException("Light is off!");
         }
 
         // publish fan command over MQTT
-        mqttPublisherService.publishCommand(topic, color.toString());
+        mqttPublisherService.publishCommand(topic, color);
 
         // save to database
         LightCommand command = new LightCommand();
@@ -101,13 +118,10 @@ public class CommandService {
         return new LightColorCommandDTO(command);
     }
 
-    //  light status command
+    // light status command
     public LightStatusCommandDTO handleCreateLightStatusCommand(String status, String topic) throws MqttException {
         Device device = deviceRepository.findByDeviceId("LED-1")
-            .orElseThrow(() -> new RuntimeException("Device not found!"));
-
-        // publish fan command over MQTT
-        mqttPublisherService.publishCommand(topic, status);
+                .orElseThrow(() -> new RuntimeException("Device not found!"));
 
         // save to database
         LightCommand command = new LightCommand();
@@ -119,16 +133,16 @@ public class CommandService {
                 throw new RuntimeException("Light is already on!");
             }
 
-            Integer color = getLatestColor(device);
+            String color = getLatestColor(device);
 
             if (color == null) {
-                command.setColor(1);
-                mqttPublisherService.publishCommand(topic, "1");
+                command.setColor("#FFFFFF");
+                mqttPublisherService.publishCommand(topic, "#FFFFFF");
             }
 
             else {
                 command.setColor(color);
-                mqttPublisherService.publishCommand(topic, color.toString());
+                mqttPublisherService.publishCommand(topic, color);
             }
         }
 
@@ -136,9 +150,9 @@ public class CommandService {
             if ("OFF".equals(device.getStatus())) {
                 throw new RuntimeException("Light is already off!");
             }
-            Integer color = getLatestColor(device);
+            String color = getLatestColor(device);
             command.setColor(color);
-            mqttPublisherService.publishCommand(topic, "0");
+            mqttPublisherService.publishCommand(topic, "#000000");
         }
 
         command.setDevice(device);
@@ -153,10 +167,74 @@ public class CommandService {
     }
 
     // get latest color
-    public Integer getLatestColor(Device device) {
+    public String getLatestColor(Device device) {
         return lightCommandRepository
                 .findTopByDeviceOrderByTimestampDesc(device)
                 .map(LightCommand::getColor)
-                .orElse(null); // or throw exception if preferred
+                .orElse(null);
+    }
+
+    // automatic fan controll
+    @Scheduled(fixedRate = 10000)
+    public void autoControlFan() throws MqttException {
+        Device device = deviceRepository.findByDeviceId("FAN-1")
+                .orElseThrow(() -> new RuntimeException("Device not found!"));
+
+        Device sensor = deviceRepository.findByDeviceId("DTH-1")
+                .orElseThrow(() -> new RuntimeException("Device not found!"));
+        
+        UserSetting setting = userSettingRepository.findByDevice(device)
+                .orElse(new UserSetting());
+
+        // if auto mode not turn on then this function will not work
+        if (!setting.getAutoMode()) {
+            return;
+        }
+
+        Float temperature = getLatestTemperature(sensor);
+        System.out.println("temperature: " + temperature);
+        Float desireTemperature = setting.getDesireTemperature();
+        System.out.println("desire temperature: " + desireTemperature);
+
+        // if temp > 30 then turn on the fan with speed 3
+        if (temperature > desireTemperature + 3) {
+            handleAutoFanCommand(3, device, "ON");
+        }
+        // if temp > 27 then turn on the fan with speed 2
+        else if (temperature > desireTemperature + 2) {
+            handleAutoFanCommand(2, device, "ON");
+        }
+
+        else if (temperature > desireTemperature) {
+            handleAutoFanCommand(1, device, "ON");
+        }
+
+        else if (temperature <= desireTemperature) {
+            handleAutoFanCommand(0, device, "OFF");
+        }
+    }
+
+    // handle fan command for auto mode
+    public void handleAutoFanCommand(Integer speed, Device device, String status) throws MqttException {
+        // publish fan command over MQTT
+        mqttPublisherService.publishCommand("itsmejoanro/feeds/bbc-fan", speed.toString());
+
+        // save to database
+        FanCommand command = new FanCommand();
+        command.setDevice(device);
+        command.setTimestamp(LocalDateTime.now());
+        command.setSpeed(speed);
+
+        deviceService.handleUpdateDeviceStatus("FAN-1", status);
+
+        fanCommandRepository.save(command);
+    }
+
+    // get latest temperature
+    public Float getLatestTemperature(Device device) {
+        return temperatureRepository
+                .findTopByDeviceOrderByTimestampDesc(device)
+                .map(Temperature::getTemperature)
+                .orElse(null);
     }
 }

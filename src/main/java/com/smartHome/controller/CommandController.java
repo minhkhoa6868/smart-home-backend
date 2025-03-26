@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.smartHome.dto.DoorCommandDTO;
 import com.smartHome.dto.FanCommandDTO;
 import com.smartHome.dto.LightColorCommandDTO;
 import com.smartHome.dto.LightStatusCommandDTO;
@@ -33,10 +34,8 @@ public class CommandController {
     }
 
     @PostMapping("/door")
-    public ResponseEntity<DoorCommand> sendDoorCommand(@RequestBody DoorCommand command) throws Exception {
-        String deviceId = command.getDevice().getDeviceId();
-        String status = command.getStatus();
-        DoorCommand newCommand = commandService.handleCreateDoorCommand(deviceId, status, "itsmejoanro/feeds/bbc-door");
+    public ResponseEntity<DoorCommandDTO> sendDoorCommand(@RequestBody DoorCommand command) throws Exception {
+        DoorCommandDTO newCommand = commandService.handleCreateDoorCommand(command.getStatus(), "itsmejoanro/feeds/bbc-door");
 
         return ResponseEntity.status(HttpStatus.CREATED).body(newCommand);
     }
