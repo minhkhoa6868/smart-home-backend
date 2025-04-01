@@ -49,12 +49,12 @@ public class CommandService {
     }
 
     // fan command
-    public FanCommandDTO handleCreateFanCommand(Integer speed, String topic) throws MqttException {
+    public FanCommandDTO handleCreateFanCommand(String speed, String topic) throws MqttException {
         Device device = deviceRepository.findByDeviceId("FAN-1")
                 .orElseThrow(() -> new RuntimeException("Device not found!"));
 
         // publish fan command over MQTT
-        mqttPublisherService.publishCommand(topic, speed.toString());
+        mqttPublisherService.publishCommand(topic, speed);
 
         // save to database
         FanCommand command = new FanCommand();
@@ -63,7 +63,7 @@ public class CommandService {
         command.setSpeed(speed);
         fanCommandRepository.save(command);
 
-        if (speed == 0) {
+        if (speed == "0") {
             deviceService.handleUpdateDeviceStatus("FAN-1", "OFF");
         }
 
@@ -88,7 +88,13 @@ public class CommandService {
         command.setTimestamp(LocalDateTime.now());
         command.setStatus(status);
 
-        // deviceService.handleUpdateDeviceStatus("DOOR-1", status);
+        if (status == "1") {
+            deviceService.handleUpdateDeviceStatus("DOOR-1", "OPEN");
+        }
+
+        else if (status == "0") {
+            deviceService.handleUpdateDeviceStatus("DOOR-1", "CLOSE");
+        }
 
         doorCommanndRepository.save(command);
 
@@ -196,28 +202,30 @@ public class CommandService {
         Float desireTemperature = setting.getDesireTemperature();
         System.out.println("desire temperature: " + desireTemperature);
 
-        // if temp > 30 then turn on the fan with speed 3
-        if (temperature > desireTemperature + 3) {
-            handleAutoFanCommand(3, device, "ON");
+        // if temp > temp user want + 2 then turn on the fan with speed 3
+        if (temperature > desireTemperature + 2) {
+            handleAutoFanCommand("3", device, "ON");
         }
-        // if temp > 27 then turn on the fan with speed 2
-        else if (temperature > desireTemperature + 2) {
-            handleAutoFanCommand(2, device, "ON");
+
+        // if temp > temp user want then turn on the fan with speed 2
+        else if (temperature > desireTemperature + 1) {
+            handleAutoFanCommand("2", device, "ON");
         }
 
         else if (temperature > desireTemperature) {
-            handleAutoFanCommand(1, device, "ON");
+            handleAutoFanCommand("1", device, "ON");
         }
 
+        // if smaller then turn off
         else if (temperature <= desireTemperature) {
-            handleAutoFanCommand(0, device, "OFF");
+            handleAutoFanCommand("0", device, "OFF");
         }
     }
 
     // handle fan command for auto mode
-    public void handleAutoFanCommand(Integer speed, Device device, String status) throws MqttException {
+    public void handleAutoFanCommand(String speed, Device device, String status) throws MqttException {
         // publish fan command over MQTT
-        mqttPublisherService.publishCommand("itsmejoanro/feeds/bbc-fan", speed.toString());
+        mqttPublisherService.publishCommand("itsmejoanro/feeds/bbc-fan", speed);
 
         // save to database
         FanCommand command = new FanCommand();

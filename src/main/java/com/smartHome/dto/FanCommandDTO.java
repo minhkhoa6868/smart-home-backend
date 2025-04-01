@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class FanCommandDTO {
-    private Integer speed;
+    private String speed;
     private String deviceId;
 
     public FanCommandDTO() {}

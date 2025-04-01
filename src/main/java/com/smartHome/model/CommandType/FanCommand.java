@@ -12,6 +12,6 @@ import lombok.Setter;
 @Setter
 @DiscriminatorValue("FANCOMMAND")
 public class FanCommand extends Command {
-    @Column(columnDefinition = "INT", nullable = false)
-    private Integer speed;
+    @Column(columnDefinition = "VARCHAR(1)", nullable = false)
+    private String speed;
 }
