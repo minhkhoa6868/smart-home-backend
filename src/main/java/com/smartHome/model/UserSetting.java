@@ -18,8 +18,5 @@ public class UserSetting {
     private Device device;
 
     @Column(nullable = false)
-    private Float desireTemperature;
-
-    @Column(nullable = false)
     private Boolean autoMode = false;
 }

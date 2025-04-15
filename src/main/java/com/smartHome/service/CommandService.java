@@ -15,12 +15,12 @@ import com.smartHome.model.UserSetting;
 import com.smartHome.model.CommandType.DoorCommand;
 import com.smartHome.model.CommandType.FanCommand;
 import com.smartHome.model.CommandType.LightCommand;
-import com.smartHome.model.RecordType.Temperature;
+import com.smartHome.model.RecordType.Light;
+import com.smartHome.repository.BrightnessRepository;
 import com.smartHome.repository.DeviceRepository;
 import com.smartHome.repository.DoorCommanndRepository;
 import com.smartHome.repository.FanCommandRepository;
 import com.smartHome.repository.LightCommandRepository;
-import com.smartHome.repository.TemperatureRepository;
 import com.smartHome.repository.UserSettingRepository;
 
 @Service
@@ -31,12 +31,12 @@ public class CommandService {
     private final LightCommandRepository lightCommandRepository;
     private final DeviceRepository deviceRepository;
     private final DeviceService deviceService;
-    private final TemperatureRepository temperatureRepository;
+    private final BrightnessRepository brightnessRepository;
     private final UserSettingRepository userSettingRepository;
 
     public CommandService(MqttPublisherService mqttPublisherService, FanCommandRepository fanCommandRepository,
             DoorCommanndRepository doorCommanndRepository, LightCommandRepository lightCommandRepository,
-            DeviceRepository deviceRepository, DeviceService deviceService, TemperatureRepository temperatureRepository,
+            DeviceRepository deviceRepository, DeviceService deviceService, BrightnessRepository brightnessRepository,
             UserSettingRepository userSettingRepository) {
         this.mqttPublisherService = mqttPublisherService;
         this.fanCommandRepository = fanCommandRepository;
@@ -44,7 +44,7 @@ public class CommandService {
         this.lightCommandRepository = lightCommandRepository;
         this.deviceRepository = deviceRepository;
         this.deviceService = deviceService;
-        this.temperatureRepository = temperatureRepository;
+        this.brightnessRepository = brightnessRepository;
         this.userSettingRepository = userSettingRepository;
     }
 
@@ -63,11 +63,11 @@ public class CommandService {
         command.setSpeed(speed);
         fanCommandRepository.save(command);
 
-        if (speed == "0") {
+        if ("0".equals(speed)) {
             deviceService.handleUpdateDeviceStatus("FAN-1", "OFF");
         }
 
-        else {
+        else if ("1".equals(speed) || "2".equals(speed) || "3".equals(speed)) {
             deviceService.handleUpdateDeviceStatus("FAN-1", "ON");
         }
 
@@ -88,11 +88,11 @@ public class CommandService {
         command.setTimestamp(LocalDateTime.now());
         command.setStatus(status);
 
-        if (status == "1") {
+        if ("1".equals(status)) {
             deviceService.handleUpdateDeviceStatus("DOOR-1", "OPEN");
         }
 
-        else if (status == "0") {
+        else if ("0".equals(status)) {
             deviceService.handleUpdateDeviceStatus("DOOR-1", "CLOSE");
         }
 
@@ -182,11 +182,11 @@ public class CommandService {
 
     // automatic fan controll
     @Scheduled(fixedRate = 10000)
-    public void autoControlFan() throws MqttException {
-        Device device = deviceRepository.findByDeviceId("FAN-1")
+    public void autoControlLight() throws MqttException {
+        Device device = deviceRepository.findByDeviceId("LED-1")
                 .orElseThrow(() -> new RuntimeException("Device not found!"));
 
-        Device sensor = deviceRepository.findByDeviceId("DTH-1")
+        Device sensor = deviceRepository.findByDeviceId("LIGHT-1")
                 .orElseThrow(() -> new RuntimeException("Device not found!"));
         
         UserSetting setting = userSettingRepository.findByDevice(device)
@@ -197,52 +197,57 @@ public class CommandService {
             return;
         }
 
-        Float temperature = getLatestTemperature(sensor);
-        System.out.println("temperature: " + temperature);
-        Float desireTemperature = setting.getDesireTemperature();
-        System.out.println("desire temperature: " + desireTemperature);
+        Float brightness = getLatestBrightness(sensor);
 
-        // if temp > temp user want + 2 then turn on the fan with speed 3
-        if (temperature > desireTemperature + 2) {
-            handleAutoFanCommand("3", device, "ON");
+        if (brightness < 40) {
+            handleAutoLightCommand(device, "ON");
         }
 
-        // if temp > temp user want then turn on the fan with speed 2
-        else if (temperature > desireTemperature + 1) {
-            handleAutoFanCommand("2", device, "ON");
-        }
-
-        else if (temperature > desireTemperature) {
-            handleAutoFanCommand("1", device, "ON");
-        }
-
-        // if smaller then turn off
-        else if (temperature <= desireTemperature) {
-            handleAutoFanCommand("0", device, "OFF");
+        else if (brightness > 70) {
+            handleAutoLightCommand(device, "OFF");
         }
     }
 
     // handle fan command for auto mode
-    public void handleAutoFanCommand(String speed, Device device, String status) throws MqttException {
-        // publish fan command over MQTT
-        mqttPublisherService.publishCommand("itsmejoanro/feeds/bbc-fan", speed);
+    public void handleAutoLightCommand(Device device, String status) throws MqttException {
+        LightCommand command = new LightCommand();
+        String topic = "itsmejoanro/feeds/bbc-led";
 
-        // save to database
-        FanCommand command = new FanCommand();
+        if ("ON".equals(status)) {
+            // save to database
+            String color = getLatestColor(device);
+
+            if (color == null) {
+                command.setColor("#FFFFFF");
+                mqttPublisherService.publishCommand(topic, "#FFFFFF");
+            }
+
+            else {
+                command.setColor(color);
+                mqttPublisherService.publishCommand(topic, color);
+            }
+        }
+
+        else if ("OFF".equals(status)) {
+            String color = getLatestColor(device);
+            command.setColor(color);
+            mqttPublisherService.publishCommand(topic, "#000000");
+        }
+
         command.setDevice(device);
         command.setTimestamp(LocalDateTime.now());
-        command.setSpeed(speed);
+        command.setStatus(status);
 
         deviceService.handleUpdateDeviceStatus("FAN-1", status);
 
-        fanCommandRepository.save(command);
+        lightCommandRepository.save(command);
     }
 
-    // get latest temperature
-    public Float getLatestTemperature(Device device) {
-        return temperatureRepository
+    // get latest brightness
+    public Float getLatestBrightness(Device device) {
+        return brightnessRepository
                 .findTopByDeviceOrderByTimestampDesc(device)
-                .map(Temperature::getTemperature)
+                .map(Light::getBrightness)
                 .orElse(null);
     }
 }

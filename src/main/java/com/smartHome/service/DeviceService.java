@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-
 import com.smartHome.dto.DeviceDTO;
 import com.smartHome.model.Device;
 import com.smartHome.repository.DeviceRepository;
@@ -61,6 +60,7 @@ public class DeviceService {
 
     // handle update device status
     public void handleUpdateDeviceStatus(String deviceId, String status) {
+        System.out.println(deviceId + status);
         // check if device exists
         Device existingDevice = deviceRepository.findByDeviceId(deviceId)
               .orElseThrow(() -> new RuntimeException("Device not found!"));

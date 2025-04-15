@@ -21,7 +21,7 @@ public class UserSettingController {
 
     @PostMapping("/auto-mode")
     public String setAutoMode(@RequestBody UserSettingDTO userSettingDTO) {
-        userSettingService.handleAutoMode("FAN-1", userSettingDTO.getAutoMode(), userSettingDTO.getDesireTemperature());
+        userSettingService.handleAutoMode("LED-1", userSettingDTO.getAutoMode());
         
         return userSettingDTO.getAutoMode() ? "Auto mode is on" : "Auto mode is off";
     }

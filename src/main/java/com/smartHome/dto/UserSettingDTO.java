@@ -7,5 +7,4 @@ import lombok.Setter;
 @Setter
 public class UserSettingDTO {
     private Boolean autoMode;
-    private Float desireTemperature;
 }

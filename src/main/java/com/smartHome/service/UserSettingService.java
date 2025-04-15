@@ -18,7 +18,7 @@ public class UserSettingService {
     }
 
     // handle turn on auto mode
-    public void handleAutoMode(String deviceId, Boolean autoMode, Float desireTemperature) {
+    public void handleAutoMode(String deviceId, Boolean autoMode) {
         Device device = deviceRepository.findByDeviceId(deviceId)
             .orElseThrow(() -> new RuntimeException("Device not found!"));
 
@@ -27,7 +27,6 @@ public class UserSettingService {
 
         setting.setDevice(device);
         setting.setAutoMode(autoMode);
-        setting.setDesireTemperature(desireTemperature);
         userSettingRepository.save(setting);
     }
 }
