@@ -1,6 +1,6 @@
 package com.smartHome.model;
 
-import java.util.Set;
+import java.util.List;
 
 import jakarta.persistence.*;
 
@@ -14,7 +14,7 @@ import lombok.Setter;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long user_id;
+    private Long userId;
 
     @Column(columnDefinition = "VARCHAR(50)", nullable = false)
     private String username;
@@ -28,5 +28,8 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "device_id")
     )
-    private Set<Device> hasDevices;
+    private List<Device> hasDevices;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private List<Command> commands;
 }

@@ -23,4 +23,8 @@ public class Command {
     @ManyToOne
     @JoinColumn(name = "device_id", nullable = false)
     private Device device;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 }

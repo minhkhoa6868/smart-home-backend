@@ -14,4 +14,7 @@ import lombok.Setter;
 public class FanCommand extends Command {
     @Column(columnDefinition = "VARCHAR(1)", nullable = false)
     private String speed;
+
+    @Column(columnDefinition = "VARCHAR(10)", nullable = false)
+    private String status;
 }

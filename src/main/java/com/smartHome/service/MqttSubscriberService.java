@@ -3,8 +3,10 @@ package com.smartHome.service;
 import java.time.LocalDateTime;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
+import com.smartHome.dto.RecordDTO;
 import com.smartHome.model.Device;
 import com.smartHome.repository.DeviceRepository;
 import com.smartHome.model.RecordType.Distance;
@@ -20,11 +22,13 @@ public class MqttSubscriberService {
     private final IMqttClient mqttClient;
     private final RecordRepository recordRepository;
     private final DeviceRepository deviceRepository;
+    private final SimpMessagingTemplate simpMessagingTemplate;
 
-    public MqttSubscriberService(RecordRepository recordRepository, DeviceRepository deviceRepository, IMqttClient iMqttClient) throws Exception {
+    public MqttSubscriberService(RecordRepository recordRepository, DeviceRepository deviceRepository, IMqttClient iMqttClient, SimpMessagingTemplate simpMessagingTemplate) throws Exception {
         this.recordRepository = recordRepository;
         this.deviceRepository = deviceRepository;
         this.mqttClient = iMqttClient;
+        this.simpMessagingTemplate = simpMessagingTemplate;
     }
 
     @PostConstruct
@@ -69,6 +73,11 @@ public class MqttSubscriberService {
                         humidity.setTimestamp(timestamp);
                         humidity.setTemperature(value);
                         recordRepository.save(humidity);
+
+                        RecordDTO humidityDTO = new RecordDTO();
+                        humidityDTO.setTimestamp(timestamp);
+                        humidityDTO.setHumidity(value);
+                        simpMessagingTemplate.convertAndSend("/topic/humidity", humidityDTO);
                         break;
                 
                     case "itsmejoanro/feeds/bbc-temp":
@@ -78,6 +87,11 @@ public class MqttSubscriberService {
                         temperature.setTimestamp(timestamp);
                         temperature.setTemperature(value);
                         recordRepository.save(temperature);
+
+                        RecordDTO temperatureDTO = new RecordDTO();
+                        temperatureDTO.setTimestamp(timestamp);
+                        temperatureDTO.setTemperature(value);
+                        simpMessagingTemplate.convertAndSend("/topic/temperature", temperatureDTO);
                         break;
 
                     case "itsmejoanro/feeds/bbc-distance":
@@ -87,6 +101,11 @@ public class MqttSubscriberService {
                         motion.setTimestamp(timestamp);
                         motion.setDistance(value);
                         recordRepository.save(motion);
+
+                        RecordDTO distanceDTO = new RecordDTO();
+                        distanceDTO.setTimestamp(timestamp);
+                        distanceDTO.setMotion(value);
+                        simpMessagingTemplate.convertAndSend("/topic/distance", distanceDTO);
                         break;
 
                     case "itsmejoanro/feeds/bbc-light":
@@ -96,6 +115,11 @@ public class MqttSubscriberService {
                         light.setTimestamp(timestamp);
                         light.setBrightness(value);
                         recordRepository.save(light);
+
+                        RecordDTO brightnessDTO = new RecordDTO();
+                        brightnessDTO.setTimestamp(timestamp);
+                        brightnessDTO.setBrightness(value);
+                        simpMessagingTemplate.convertAndSend("/topic/light", brightnessDTO);
                         break;
 
                     default:

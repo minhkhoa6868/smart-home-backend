@@ -24,6 +24,7 @@ public class MqttPublisherService {
             message.setQos(1);
             message.setRetained(false);
 
+
             mqttClient.publish(topic, message);
             System.out.println("Sent to device: " + topic + " -> " + payload);
 

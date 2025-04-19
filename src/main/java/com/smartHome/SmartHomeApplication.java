@@ -9,14 +9,12 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
 @EnableScheduling
 @SpringBootApplication
-@ComponentScan(basePackages = {"com.smartHome", "com.security"})
 public class SmartHomeApplication {
 	@Bean(destroyMethod = "disconnect")
 	public IMqttClient mqttClient() throws MqttException {

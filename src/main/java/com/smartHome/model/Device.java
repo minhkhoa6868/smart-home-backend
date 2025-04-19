@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.util.List;
-import java.util.Set;
 
 @Entity
 @Table(name = "devices")
@@ -24,8 +23,11 @@ public class Device {
     @Column(columnDefinition = "NUMERIC(10,2)", nullable = false)
     private Long power;
 
+    @Column(nullable = false)
+    private Boolean isAutoMode;
+
     @ManyToMany(mappedBy = "hasDevices")
-    private Set<User> hasByUsers;
+    private List<User> hasByUsers;
 
     @OneToMany(mappedBy = "device", cascade = CascadeType.ALL)
     private List<Command> commands;

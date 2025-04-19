@@ -1,4 +1,4 @@
-package com.security;
+package com.smartHome.security;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;

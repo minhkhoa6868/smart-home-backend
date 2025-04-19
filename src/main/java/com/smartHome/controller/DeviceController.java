@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 
 @RestController
@@ -36,5 +37,12 @@ public class DeviceController {
     public ResponseEntity<List<DeviceDTO>> getAllDevices() {
         List<DeviceDTO> devices = deviceService.handleGetAllDevices();
         return ResponseEntity.ok(devices);
+    }
+
+    // api for get device by id
+    @GetMapping("/{deviceId}")
+    public ResponseEntity<DeviceDTO> getDeviceById(@PathVariable String deviceId) {
+        DeviceDTO deviceDTO = deviceService.handleGetDevice(deviceId);
+        return ResponseEntity.ok(deviceDTO);
     }
 }

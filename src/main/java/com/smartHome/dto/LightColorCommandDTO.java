@@ -10,11 +10,13 @@ import lombok.Setter;
 public class LightColorCommandDTO {
     private String color;
     private String deviceId;
+    private Long userId;
 
     public LightColorCommandDTO() {}
 
     public LightColorCommandDTO(LightCommand command) {
         this.color = command.getColor();
         this.deviceId = command.getDevice().getDeviceId();
+        this.userId = command.getUser().getUserId();
     }
 }

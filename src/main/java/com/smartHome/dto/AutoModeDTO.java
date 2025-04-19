@@ -5,6 +5,6 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UserSettingDTO {
+public class AutoModeDTO {
     private Boolean autoMode;
 }

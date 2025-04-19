@@ -1,5 +1,6 @@
 package com.smartHome.service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +30,7 @@ public class DeviceService {
         newDevice.setDevice_name(device.getDeviceName());
         newDevice.setStatus(device.getStatus());
         newDevice.setPower(device.getPower());
+        newDevice.setIsAutoMode(false);
         deviceRepository.save(newDevice);
 
         return new DeviceDTO(newDevice);
@@ -39,8 +41,9 @@ public class DeviceService {
         List<Device> devices = deviceRepository.findAll();
 
         return devices.stream()
-              .map(DeviceDTO::new)
-              .collect(Collectors.toList());
+                .sorted(Comparator.comparing(Device::getDeviceId))
+                .map(DeviceDTO::new)
+                .collect(Collectors.toList());
     }
 
     // handle update device
@@ -68,5 +71,14 @@ public class DeviceService {
         // update device status
         existingDevice.setStatus(status);
         deviceRepository.save(existingDevice);
+    }
+
+    // handle get device
+    public DeviceDTO handleGetDevice(String deviceId) {
+        // check if device exists
+        Device existingDevice = deviceRepository.findByDeviceId(deviceId)
+              .orElseThrow(() -> new RuntimeException("Device not found!"));
+
+        return new DeviceDTO(existingDevice);
     }
 }
