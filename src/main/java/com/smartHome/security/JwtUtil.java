@@ -8,14 +8,14 @@ import javax.crypto.SecretKey;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtUtil {
-    private final String secretKey = Dotenv.load().get("JWT_SECRET_KEY");
+    private final String secretKey = System.getenv("JWT_SECRET_KEY");
+
     private final SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
 
     // Generate a JWT token for a user
