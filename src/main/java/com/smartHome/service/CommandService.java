@@ -300,7 +300,7 @@ public class CommandService {
         command.setTimestamp(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
         command.setStatus(status);
 
-        deviceService.handleUpdateDeviceStatus("FAN-1", status);
+        deviceService.handleUpdateDeviceStatus("LED-1", status);
 
         lightCommandRepository.save(command);
     }
