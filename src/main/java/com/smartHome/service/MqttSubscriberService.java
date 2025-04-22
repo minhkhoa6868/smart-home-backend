@@ -1,6 +1,6 @@
 package com.smartHome.service;
-
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -64,7 +64,7 @@ public class MqttSubscriberService {
 
                 Device device;
 
-                LocalDateTime timestamp = LocalDateTime.now();
+                ZonedDateTime timestamp = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
                 switch (topics) {
                     case "itsmejoanro/feeds/bbc-humid":
                         device = deviceRepository.findById("DTH-1").orElse(null);

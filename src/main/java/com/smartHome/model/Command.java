@@ -1,6 +1,6 @@
 package com.smartHome.model;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -18,7 +18,7 @@ public class Command {
     private Long command_id;
 
     @Column(nullable = false)
-    private LocalDateTime timestamp;
+    private ZonedDateTime timestamp;
 
     @ManyToOne
     @JoinColumn(name = "device_id", nullable = false)

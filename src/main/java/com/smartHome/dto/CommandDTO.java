@@ -1,6 +1,6 @@
 package com.smartHome.dto;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 import com.smartHome.model.Command;
 import com.smartHome.model.CommandType.DoorCommand;
@@ -13,7 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class CommandDTO {
-    private LocalDateTime timestamp;
+    private ZonedDateTime timestamp;
     private String deviceName;
     private String status;
     private String userName;

@@ -1,6 +1,6 @@
 package com.smartHome.dto;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 
 import com.smartHome.model.Record;
 import com.smartHome.model.RecordType.Distance;
@@ -15,7 +15,7 @@ import lombok.Setter;
 @Setter
 public class RecordDTO {
     private Long recordId;
-    private LocalDateTime timestamp;
+    private ZonedDateTime timestamp;
     private Float humidity;
     private Float brightness;
     private Float temperature;

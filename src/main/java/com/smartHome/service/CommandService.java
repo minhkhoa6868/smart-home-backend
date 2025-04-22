@@ -1,6 +1,7 @@
 package com.smartHome.service;
 
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -85,7 +86,7 @@ public class CommandService {
         FanCommand command = new FanCommand();
         command.setDevice(device);
         command.setUser(user);
-        command.setTimestamp(LocalDateTime.now());
+        command.setTimestamp(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
         command.setSpeed(speed);
 
         if ("0".equals(speed)) {
@@ -129,7 +130,7 @@ public class CommandService {
         DoorCommand command = new DoorCommand();
         command.setDevice(device);
         command.setUser(user);
-        command.setTimestamp(LocalDateTime.now());
+        command.setTimestamp(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
 
         if ("1".equals(status)) {
             command.setStatus("Open");
@@ -165,7 +166,7 @@ public class CommandService {
         LightCommand command = new LightCommand();
         command.setDevice(device);
         command.setUser(user);
-        command.setTimestamp(LocalDateTime.now());
+        command.setTimestamp(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
         command.setStatus("On");
         command.setColor(color);
         lightCommandRepository.save(command);
@@ -215,7 +216,7 @@ public class CommandService {
 
         command.setDevice(device);
         command.setUser(user);
-        command.setTimestamp(LocalDateTime.now());
+        command.setTimestamp(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
         command.setStatus(status);
 
         deviceService.handleUpdateDeviceStatus("LED-1", status);
@@ -296,7 +297,7 @@ public class CommandService {
         }
 
         command.setDevice(device);
-        command.setTimestamp(LocalDateTime.now());
+        command.setTimestamp(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
         command.setStatus(status);
 
         deviceService.handleUpdateDeviceStatus("FAN-1", status);
