@@ -19,10 +19,12 @@ import com.smartHome.model.User;
 import com.smartHome.model.CommandType.DoorCommand;
 import com.smartHome.model.CommandType.FanCommand;
 import com.smartHome.model.CommandType.LightCommand;
+import com.smartHome.model.RecordType.Distance;
 import com.smartHome.model.RecordType.Light;
 import com.smartHome.repository.BrightnessRepository;
 import com.smartHome.repository.CommandRepository;
 import com.smartHome.repository.DeviceRepository;
+import com.smartHome.repository.DistanceRepository;
 import com.smartHome.repository.DoorCommanndRepository;
 import com.smartHome.repository.FanCommandRepository;
 import com.smartHome.repository.LightCommandRepository;
@@ -39,11 +41,13 @@ public class CommandService {
     private final UserRepository userRepository;
     private final DeviceService deviceService;
     private final BrightnessRepository brightnessRepository;
+    private final DistanceRepository distanceRepository;
+    private Float tempDistance = 0f;
 
     public CommandService(MqttPublisherService mqttPublisherService, FanCommandRepository fanCommandRepository,
             DoorCommanndRepository doorCommanndRepository, LightCommandRepository lightCommandRepository,
             DeviceRepository deviceRepository, DeviceService deviceService, BrightnessRepository brightnessRepository,
-            CommandRepository commandRepository, UserRepository userRepository) {
+            CommandRepository commandRepository, UserRepository userRepository, DistanceRepository distanceRepository) {
         this.mqttPublisherService = mqttPublisherService;
         this.fanCommandRepository = fanCommandRepository;
         this.doorCommanndRepository = doorCommanndRepository;
@@ -53,6 +57,7 @@ public class CommandService {
         this.deviceService = deviceService;
         this.brightnessRepository = brightnessRepository;
         this.commandRepository = commandRepository;
+        this.distanceRepository = distanceRepository;
     }
 
     // get five latest command
@@ -310,6 +315,32 @@ public class CommandService {
         return brightnessRepository
                 .findTopByDeviceOrderByTimestampDesc(device)
                 .map(Light::getBrightness)
+                .orElse(null);
+    }
+
+    // handle alert by distance
+    @Scheduled(fixedRate = 60000)
+    public boolean handleAlert() {
+        Device sensor = deviceRepository.findByDeviceId("DISTANCE-1")
+            .orElseThrow(() -> new RuntimeException("Device not found!"));
+
+        Float distance = getLatestDistance(sensor);
+
+        if (distance <= tempDistance) {
+            return true;
+        }
+
+        else {
+            tempDistance = distance;
+            return false;
+        }
+    }
+
+    // get latest distance
+    public Float getLatestDistance(Device device) {
+        return distanceRepository
+                .findTopByDeviceOrderByTimestampDesc(device)
+                .map(Distance::getDistance)
                 .orElse(null);
     }
 }
