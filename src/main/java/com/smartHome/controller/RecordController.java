@@ -3,7 +3,9 @@ package com.smartHome.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.smartHome.dto.HumidityDTO;
 import com.smartHome.dto.RecordDTO;
+import com.smartHome.dto.TemperatureDTO;
 import com.smartHome.service.RecordService;
 
 import java.util.List;
@@ -32,5 +34,17 @@ public class RecordController {
     public ResponseEntity<List<RecordDTO>> getAllRecords() {
         List<RecordDTO> records = recordService.handleGetAllRecords();
         return ResponseEntity.ok(records);
+    }
+
+    @GetMapping("/humidity/today")
+    public ResponseEntity<List<HumidityDTO>> getTodayHumidity() {
+        List<HumidityDTO> humidities = recordService.handleGetTodayHumidity();
+        return ResponseEntity.ok(humidities);
+    }
+    
+    @GetMapping("/temperature/today")
+    public ResponseEntity<List<TemperatureDTO>> getTodayTemperature() {
+        List<TemperatureDTO> temperatures = recordService.handleGetTodayTemperature();
+        return ResponseEntity.ok(temperatures);
     }
 }

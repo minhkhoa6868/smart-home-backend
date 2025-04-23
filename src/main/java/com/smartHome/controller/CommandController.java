@@ -62,11 +62,18 @@ public class CommandController {
     }
 
     @PostMapping("/light/auto-mode")
-    public String setAutoMode(@RequestBody AutoModeDTO autoModeDTO) {
-        commandService.handleAutoMode(autoModeDTO.getAutoMode());
+    public String setLightAutoMode(@RequestBody AutoModeDTO autoModeDTO) {
+        commandService.handleAutoMode(autoModeDTO.getAutoMode(), "LED-1");
         
-        return autoModeDTO.getAutoMode() ? "Auto mode is on" : "Auto mode is off";
+        return autoModeDTO.getAutoMode() ? "Light auto mode is on" : "Light auto mode is off";
     }
+
+    @PostMapping("/security/auto-mode")
+    public String setSecurityMode(@RequestBody AutoModeDTO autoModeDTO) {
+        commandService.handleAutoMode(autoModeDTO.getAutoMode(), "DISTANCE-1");
+        return autoModeDTO.getAutoMode() ? "Security mode is on" : "Security mode is off";
+    }
+    
     
     @GetMapping("/fan/latest")
     public ResponseEntity<Map<String, String>> getLatestFanCommand() {

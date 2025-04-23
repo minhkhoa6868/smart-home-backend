@@ -3,12 +3,13 @@ package com.smartHome.service;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
 import com.smartHome.dto.CommandDTO;
 import com.smartHome.dto.DoorCommandDTO;
 import com.smartHome.dto.FanCommandDTO;
@@ -42,12 +43,14 @@ public class CommandService {
     private final DeviceService deviceService;
     private final BrightnessRepository brightnessRepository;
     private final DistanceRepository distanceRepository;
+    private final SimpMessagingTemplate messagingTemplate;
     private Float tempDistance = 0f;
 
     public CommandService(MqttPublisherService mqttPublisherService, FanCommandRepository fanCommandRepository,
             DoorCommanndRepository doorCommanndRepository, LightCommandRepository lightCommandRepository,
             DeviceRepository deviceRepository, DeviceService deviceService, BrightnessRepository brightnessRepository,
-            CommandRepository commandRepository, UserRepository userRepository, DistanceRepository distanceRepository) {
+            CommandRepository commandRepository, UserRepository userRepository, DistanceRepository distanceRepository, 
+            SimpMessagingTemplate messagingTemplate) {
         this.mqttPublisherService = mqttPublisherService;
         this.fanCommandRepository = fanCommandRepository;
         this.doorCommanndRepository = doorCommanndRepository;
@@ -58,6 +61,7 @@ public class CommandService {
         this.brightnessRepository = brightnessRepository;
         this.commandRepository = commandRepository;
         this.distanceRepository = distanceRepository;
+        this.messagingTemplate = messagingTemplate;
     }
 
     // get five latest command
@@ -243,8 +247,8 @@ public class CommandService {
     }
 
     // turn on auto mode
-    public void handleAutoMode(Boolean isAutoMode) {
-        Device device = deviceRepository.findByDeviceId("LED-1")
+    public void handleAutoMode(Boolean isAutoMode, String deviceId) {
+        Device device = deviceRepository.findByDeviceId(deviceId)
                 .orElseThrow(() -> new RuntimeException("Device not found!"));
 
         device.setIsAutoMode(isAutoMode);
@@ -320,20 +324,24 @@ public class CommandService {
 
     // handle alert by distance
     @Scheduled(fixedRate = 60000)
-    public boolean handleAlert() {
+    public void handleAlert() {
         Device sensor = deviceRepository.findByDeviceId("DISTANCE-1")
             .orElseThrow(() -> new RuntimeException("Device not found!"));
+
+        if (!sensor.getIsAutoMode()) {
+            return;
+        }
 
         Float distance = getLatestDistance(sensor);
 
         if (distance <= tempDistance) {
-            return true;
+            messagingTemplate.convertAndSend("/topic/alert", Map.of(
+                "alert", true,
+                "message", "Something strange"
+            ));
         }
 
-        else {
-            tempDistance = distance;
-            return false;
-        }
+        tempDistance = distance;
     }
 
     // get latest distance
