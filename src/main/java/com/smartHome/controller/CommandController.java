@@ -61,19 +61,47 @@ public class CommandController {
         return ResponseEntity.status(HttpStatus.CREATED).body(newCommand);
     }
 
-    @PostMapping("/light/auto-mode")
-    public String setLightAutoMode(@RequestBody TimeRangeDTO timeRangeDTO) {
-        commandService.handleAutoLightMode(timeRangeDTO.getStarTime(), timeRangeDTO.getEndTime());
+    @PostMapping("/light/auto-mode/on")
+    public ResponseEntity<Map<String, String>> setLightAutoModeOn(@RequestBody TimeRangeDTO timeRangeDTO) {
+        commandService.handleAutoLightModeOn(timeRangeDTO.getStarTime(), timeRangeDTO.getEndTime());
         
-        return "Light auto mode is on";
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Light auto mode is on");
+
+        return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/security-mode")
-    public String setSecurityMode(@RequestBody TimeRangeDTO timeRangeDTO) {
-        commandService.handleSecurityMode(timeRangeDTO.getStarTime(), timeRangeDTO.getEndTime());
+    @PostMapping("/light/auto-mode/off")
+    public ResponseEntity<Map<String, String>> setLightAutoModeOff() {
+        commandService.handleAutoLightModeOff();
 
-        return "Security mode is on";
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Light auto mode is off");
+
+        return ResponseEntity.ok(response);
     }
+    
+
+    @PostMapping("/security-mode/on")
+    public ResponseEntity<Map<String, String>> setSecurityModeOn(@RequestBody TimeRangeDTO timeRangeDTO) {
+        commandService.handleSecurityModeOn(timeRangeDTO.getStarTime(), timeRangeDTO.getEndTime());
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Security mode is on");
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/security-mode/off")
+    public ResponseEntity<Map<String, String>> setSecurityOff() {
+        commandService.handleSecurityModeOff();
+        
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Security mode is off");
+
+        return ResponseEntity.ok(response);
+    }
+    
     
     
     @GetMapping("/fan/latest")

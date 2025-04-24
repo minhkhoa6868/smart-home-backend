@@ -246,27 +246,39 @@ public class CommandService {
                 .orElse(null);
     }
 
-    // turn on auto mode
-    public void handleAutoLightMode(ZonedDateTime startTime, ZonedDateTime endTime) {
-        Device device = deviceRepository.findByDeviceId("LED-1")
+    // turn on auto light mode
+    public void handleAutoLightModeOn(ZonedDateTime startTime, ZonedDateTime endTime) {
+        Device led = deviceRepository.findByDeviceId("LED-1")
                 .orElseThrow(() -> new RuntimeException("Device not found!"));
 
-        device.setAlertStartTime(startTime);
-        device.setAlertEndTime(endTime);
+        led.setAlertStartTime(startTime);
+        led.setAlertEndTime(endTime);
+    }
+
+    // turn off auto light mode
+    public void handleAutoLightModeOff() {
+        Device led = deviceRepository.findByDeviceId("LED-1")
+                .orElseThrow(() -> new RuntimeException("Device not found!"));
+
+        led.setAlertStartTime(null);
+        led.setAlertEndTime(null);
+        led.setIsAutoMode(false);
+
+        deviceRepository.save(led);
     }
 
     // automatic fan controll
     @Scheduled(fixedRate = 10000)
     public void autoControlLight() throws MqttException {
-        Device device = deviceRepository.findByDeviceId("LED-1")
+        Device led = deviceRepository.findByDeviceId("LED-1")
                 .orElseThrow(() -> new RuntimeException("Device not found!"));
 
         Device sensor = deviceRepository.findByDeviceId("LIGHT-1")
                 .orElseThrow(() -> new RuntimeException("Device not found!"));
 
-        if (device.getAlertStartTime() != null && device.getAlertEndTime() != null) {
-            ZonedDateTime startTime = device.getAlertStartTime();
-            ZonedDateTime endTime = device.getAlertEndTime();
+        if (led.getAlertStartTime() != null && led.getAlertEndTime() != null) {
+            ZonedDateTime startTime = led.getAlertStartTime();
+            ZonedDateTime endTime = led.getAlertEndTime();
             ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
             
             boolean isActive;
@@ -279,30 +291,30 @@ public class CommandService {
                 isActive = !now.isBefore(startTime) || !now.isAfter(endTime);
             }
         
-            device.setIsAutoMode(isActive);
+            led.setIsAutoMode(isActive);
         
             if (!isActive && now.isAfter(endTime)) {
                 // Reset time range after it's done
-                device.setAlertStartTime(null);
-                device.setAlertEndTime(null);
+                led.setAlertStartTime(null);
+                led.setAlertEndTime(null);
             }
         
-            deviceRepository.save(device);
+            deviceRepository.save(led);
         }
 
         // if auto mode not turn on then this function will not work
-        if (!device.getIsAutoMode()) {
+        if (!led.getIsAutoMode()) {
             return;
         }
 
         Float brightness = getLatestBrightness(sensor);
 
         if (brightness < 40) {
-            handleAutoLightCommand(device, "On");
+            handleAutoLightCommand(led, "On");
         }
 
         else if (brightness > 70) {
-            handleAutoLightCommand(device, "Off");
+            handleAutoLightCommand(led, "Off");
         }
     }
 
@@ -349,13 +361,25 @@ public class CommandService {
                 .orElse(null);
     }
 
-    // security mode
-    public void handleSecurityMode(ZonedDateTime startTime, ZonedDateTime endTime) {
+    // turn on security mode
+    public void handleSecurityModeOn(ZonedDateTime startTime, ZonedDateTime endTime) {
         Device sensor = deviceRepository.findByDeviceId("DISTANCE-1")
             .orElseThrow(() -> new RuntimeException("Device not found!"));
 
         sensor.setAlertStartTime(startTime);
         sensor.setAlertEndTime(endTime);
+    }
+
+    // turn off security mode
+    public void handleSecurityModeOff() {
+        Device sensor = deviceRepository.findByDeviceId("DISTANCE-1")
+            .orElseThrow(() -> new RuntimeException("Device not found!"));
+
+        sensor.setAlertStartTime(null);
+        sensor.setAlertEndTime(null);
+        sensor.setIsAutoMode(false);
+
+        deviceRepository.save(sensor);
     }
 
     // handle alert by distance
