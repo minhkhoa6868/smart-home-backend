@@ -90,6 +90,6 @@ public class DeviceService {
         Device existingDevice = deviceRepository.findByDeviceId(deviceId)
               .orElseThrow(() -> new RuntimeException("Device not found!"));
 
-        return new AutoModeDTO(existingDevice.getIsAutoMode());
+        return new AutoModeDTO(existingDevice);
     }
 }
