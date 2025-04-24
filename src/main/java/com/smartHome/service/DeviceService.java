@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+
+import com.smartHome.dto.AutoModeDTO;
 import com.smartHome.dto.DeviceDTO;
 import com.smartHome.model.Device;
 import com.smartHome.repository.DeviceRepository;
@@ -80,5 +82,14 @@ public class DeviceService {
               .orElseThrow(() -> new RuntimeException("Device not found!"));
 
         return new DeviceDTO(existingDevice);
+    }
+
+    // handle get auto mode
+    public AutoModeDTO handleGetAutoModeDevice(String deviceId) {
+        // check if device exists
+        Device existingDevice = deviceRepository.findByDeviceId(deviceId)
+              .orElseThrow(() -> new RuntimeException("Device not found!"));
+
+        return new AutoModeDTO(existingDevice.getIsAutoMode());
     }
 }

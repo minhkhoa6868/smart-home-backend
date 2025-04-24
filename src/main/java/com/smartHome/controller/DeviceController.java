@@ -3,6 +3,7 @@ package com.smartHome.controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.smartHome.dto.AutoModeDTO;
 import com.smartHome.dto.DeviceDTO;
 import com.smartHome.dto.LedDTO;
 import com.smartHome.service.CommandService;
@@ -15,7 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
-
+import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 @RequestMapping("/api/device")
@@ -63,5 +64,12 @@ public class DeviceController {
         String color = commandService.getLatestColor();
         return ResponseEntity.ok(new LedDTO(deviceDTO, color));
     }
-    
+
+    // api for get auto mode
+    @GetMapping("/{deviceId}/auto-mode")
+    public ResponseEntity<AutoModeDTO> getAutoModeDevice(@PathVariable String deviceId) {
+        AutoModeDTO autoModeDTO = deviceService.handleGetAutoModeDevice(deviceId);
+
+        return ResponseEntity.ok(autoModeDTO);
+    }
 }
