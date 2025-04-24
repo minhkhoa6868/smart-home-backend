@@ -247,11 +247,12 @@ public class CommandService {
     }
 
     // turn on auto mode
-    public void handleAutoMode(Boolean isAutoMode, String deviceId) {
-        Device device = deviceRepository.findByDeviceId(deviceId)
+    public void handleAutoLightMode(ZonedDateTime startTime, ZonedDateTime endTime) {
+        Device device = deviceRepository.findByDeviceId("LED-1")
                 .orElseThrow(() -> new RuntimeException("Device not found!"));
 
-        device.setIsAutoMode(isAutoMode);
+        device.setAlertStartTime(startTime);
+        device.setAlertEndTime(endTime);
     }
 
     // automatic fan controll
@@ -262,6 +263,32 @@ public class CommandService {
 
         Device sensor = deviceRepository.findByDeviceId("LIGHT-1")
                 .orElseThrow(() -> new RuntimeException("Device not found!"));
+
+        if (device.getAlertStartTime() != null && device.getAlertEndTime() != null) {
+            ZonedDateTime startTime = device.getAlertStartTime();
+            ZonedDateTime endTime = device.getAlertEndTime();
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+            
+            boolean isActive;
+                
+            if (startTime.isBefore(endTime)) {
+                // Normal range (e.g. 8AM to 6PM)
+                isActive = !now.isBefore(startTime) && !now.isAfter(endTime);
+            } else {
+                // Overnight range (e.g. 10PM to 6AM next day)
+                isActive = !now.isBefore(startTime) || !now.isAfter(endTime);
+            }
+        
+            device.setIsAutoMode(isActive);
+        
+            if (!isActive && now.isAfter(endTime)) {
+                // Reset time range after it's done
+                device.setAlertStartTime(null);
+                device.setAlertEndTime(null);
+            }
+        
+            deviceRepository.save(device);
+        }
 
         // if auto mode not turn on then this function will not work
         if (!device.getIsAutoMode()) {
@@ -322,11 +349,46 @@ public class CommandService {
                 .orElse(null);
     }
 
+    // security mode
+    public void handleSecurityMode(ZonedDateTime startTime, ZonedDateTime endTime) {
+        Device sensor = deviceRepository.findByDeviceId("DISTANCE-1")
+            .orElseThrow(() -> new RuntimeException("Device not found!"));
+
+        sensor.setAlertStartTime(startTime);
+        sensor.setAlertEndTime(endTime);
+    }
+
     // handle alert by distance
     @Scheduled(fixedRate = 60000)
     public void handleAlert() {
         Device sensor = deviceRepository.findByDeviceId("DISTANCE-1")
             .orElseThrow(() -> new RuntimeException("Device not found!"));
+
+        if (sensor.getAlertStartTime() != null && sensor.getAlertEndTime() != null) {
+            ZonedDateTime startTime = sensor.getAlertStartTime();
+            ZonedDateTime endTime = sensor.getAlertEndTime();
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+    
+            boolean isActive;
+        
+            if (startTime.isBefore(endTime)) {
+                // Normal range (e.g. 8AM to 6PM)
+                isActive = !now.isBefore(startTime) && !now.isAfter(endTime);
+            } else {
+                // Overnight range (e.g. 10PM to 6AM next day)
+                isActive = !now.isBefore(startTime) || !now.isAfter(endTime);
+            }
+
+            sensor.setIsAutoMode(isActive);
+
+            if (!isActive && now.isAfter(endTime)) {
+                // Reset time range after it's done
+                sensor.setAlertStartTime(null);
+                sensor.setAlertEndTime(null);
+            }
+
+            deviceRepository.save(sensor);
+        }
 
         if (!sensor.getIsAutoMode()) {
             return;

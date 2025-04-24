@@ -10,12 +10,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.smartHome.dto.AutoModeDTO;
 import com.smartHome.dto.CommandDTO;
 import com.smartHome.dto.DoorCommandDTO;
 import com.smartHome.dto.FanCommandDTO;
 import com.smartHome.dto.LightColorCommandDTO;
 import com.smartHome.dto.LightStatusCommandDTO;
+import com.smartHome.dto.TimeRangeDTO;
 // import com.smartHome.model.CommandType.DoorCommand;
 // import com.smartHome.model.CommandType.FanCommand;
 // import com.smartHome.model.CommandType.LightCommand;
@@ -62,16 +62,17 @@ public class CommandController {
     }
 
     @PostMapping("/light/auto-mode")
-    public String setLightAutoMode(@RequestBody AutoModeDTO autoModeDTO) {
-        commandService.handleAutoMode(autoModeDTO.getAutoMode(), "LED-1");
+    public String setLightAutoMode(@RequestBody TimeRangeDTO timeRangeDTO) {
+        commandService.handleAutoLightMode(timeRangeDTO.getStarTime(), timeRangeDTO.getEndTime());
         
-        return autoModeDTO.getAutoMode() ? "Light auto mode is on" : "Light auto mode is off";
+        return "Light auto mode is on";
     }
 
-    @PostMapping("/security/auto-mode")
-    public String setSecurityMode(@RequestBody AutoModeDTO autoModeDTO) {
-        commandService.handleAutoMode(autoModeDTO.getAutoMode(), "DISTANCE-1");
-        return autoModeDTO.getAutoMode() ? "Security mode is on" : "Security mode is off";
+    @PostMapping("/security-mode")
+    public String setSecurityMode(@RequestBody TimeRangeDTO timeRangeDTO) {
+        commandService.handleSecurityMode(timeRangeDTO.getStarTime(), timeRangeDTO.getEndTime());
+
+        return "Security mode is on";
     }
     
     

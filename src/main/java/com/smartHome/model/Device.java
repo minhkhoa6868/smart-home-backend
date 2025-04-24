@@ -3,6 +3,8 @@ package com.smartHome.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.ZonedDateTime;
 import java.util.List;
 
 @Entity
@@ -25,6 +27,10 @@ public class Device {
 
     @Column(nullable = false)
     private Boolean isAutoMode;
+
+    private ZonedDateTime alertStartTime;
+
+    private ZonedDateTime alertEndTime;
 
     @ManyToMany(mappedBy = "hasDevices")
     private List<User> hasByUsers;
