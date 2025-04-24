@@ -8,6 +8,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class TimeRangeDTO {
-    private ZonedDateTime starTime;
+    private ZonedDateTime startTime;
     private ZonedDateTime endTime;
 }

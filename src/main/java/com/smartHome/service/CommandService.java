@@ -253,6 +253,8 @@ public class CommandService {
 
         led.setAlertStartTime(startTime);
         led.setAlertEndTime(endTime);
+
+        deviceRepository.save(led);
     }
 
     // turn off auto light mode
@@ -368,6 +370,8 @@ public class CommandService {
 
         sensor.setAlertStartTime(startTime);
         sensor.setAlertEndTime(endTime);
+
+        deviceRepository.save(sensor);
     }
 
     // turn off security mode

@@ -63,7 +63,7 @@ public class CommandController {
 
     @PostMapping("/light/auto-mode/on")
     public ResponseEntity<Map<String, String>> setLightAutoModeOn(@RequestBody TimeRangeDTO timeRangeDTO) {
-        commandService.handleAutoLightModeOn(timeRangeDTO.getStarTime(), timeRangeDTO.getEndTime());
+        commandService.handleAutoLightModeOn(timeRangeDTO.getStartTime(), timeRangeDTO.getEndTime());
         
         Map<String, String> response = new HashMap<>();
         response.put("message", "Light auto mode is on");
@@ -84,7 +84,7 @@ public class CommandController {
 
     @PostMapping("/security-mode/on")
     public ResponseEntity<Map<String, String>> setSecurityModeOn(@RequestBody TimeRangeDTO timeRangeDTO) {
-        commandService.handleSecurityModeOn(timeRangeDTO.getStarTime(), timeRangeDTO.getEndTime());
+        commandService.handleSecurityModeOn(timeRangeDTO.getStartTime(), timeRangeDTO.getEndTime());
 
         Map<String, String> response = new HashMap<>();
         response.put("message", "Security mode is on");
