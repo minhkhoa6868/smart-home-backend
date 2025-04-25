@@ -253,6 +253,7 @@ public class CommandService {
 
         led.setAlertStartTime(startTime);
         led.setAlertEndTime(endTime);
+        led.setIsAutoMode(true);
 
         deviceRepository.save(led);
     }
@@ -370,6 +371,7 @@ public class CommandService {
 
         sensor.setAlertStartTime(startTime);
         sensor.setAlertEndTime(endTime);
+        sensor.setIsAutoMode(true);
 
         deviceRepository.save(sensor);
     }
