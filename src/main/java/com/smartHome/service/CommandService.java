@@ -389,7 +389,7 @@ public class CommandService {
     }
 
     // handle alert by distance
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 30000)
     public void handleAlert() {
         Device sensor = deviceRepository.findByDeviceId("DISTANCE-1")
             .orElseThrow(() -> new RuntimeException("Device not found!"));
