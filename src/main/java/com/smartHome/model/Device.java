@@ -37,6 +37,7 @@ public class Device {
 
     private ZonedDateTime startUsingTime;
 
+    @Column(columnDefinition = "NUMERIC(10,2)")
     private Double timeUsed;
 
     @ManyToMany(mappedBy = "hasDevices")
