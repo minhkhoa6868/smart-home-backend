@@ -110,9 +110,11 @@ public class CommandService {
         }
 
         else if ("1".equals(speed) || "2".equals(speed) || "3".equals(speed)) {
+            if ("Off".equals(device.getStatus())) {
+                deviceService.handleUpdateDeviceStatus("FAN-1", "On");
+                deviceService.handleUpdateDeviceStartUsingTime("FAN-1", now);
+            }
             command.setStatus("On");
-            deviceService.handleUpdateDeviceStatus("FAN-1", "On");
-            deviceService.handleUpdateDeviceStartUsingTime("FAN-1", now);
         }
 
         fanCommandRepository.save(command);
@@ -344,6 +346,11 @@ public class CommandService {
     public void handleAutoLightCommand(Device device, String status) throws MqttException {
         LightCommand command = new LightCommand();
         String topic = "itsmejoanro/feeds/bbc-led";
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+
+        command.setDevice(device);
+        command.setTimestamp(now);
+        command.setStatus(status);
 
         if ("On".equals(status)) {
             // save to database
@@ -358,6 +365,8 @@ public class CommandService {
                 command.setColor(color);
                 mqttPublisherService.publishCommand(topic, color);
             }
+
+            deviceService.handleUpdateDeviceStartUsingTime("LED-1", now);
         }
 
         else if ("Off".equals(status)) {
@@ -365,10 +374,6 @@ public class CommandService {
             command.setColor(color);
             mqttPublisherService.publishCommand(topic, "#000000");
         }
-
-        command.setDevice(device);
-        command.setTimestamp(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
-        command.setStatus(status);
 
         deviceService.handleUpdateDeviceStatus("LED-1", status);
 
