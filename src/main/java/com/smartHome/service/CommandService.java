@@ -511,12 +511,16 @@ public class CommandService {
     public void handleResetPowerConsumption() {
         List<String> deviceIds = List.of("FAN-1", "LED-1", "DOOR-1", "DTH-1", "LIGHT-1", "DISTANCE-1");
 
+        ZonedDateTime midnight = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"))
+                                          .toLocalDate()
+                                          .atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh"));
+
         for (String deviceId : deviceIds) {
             Device device = deviceRepository.findByDeviceId(deviceId)
                 .orElseThrow(() -> new RuntimeException("Device not found: " + deviceId));
 
             device.setPowerConsume(0D);
-            device.setStartUsingTime(null);
+            device.setStartUsingTime(midnight);
             deviceRepository.save(device);
         }
     }
