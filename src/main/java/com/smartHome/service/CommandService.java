@@ -507,7 +507,7 @@ public class CommandService {
     }
 
     // handle reset power consumption
-    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Ho_Chi_Minh")
+    @Scheduled(cron = "0 0 0 1 * *", zone = "Asia/Ho_Chi_Minh")
     public void handleResetPowerConsumption() {
         List<String> deviceIds = List.of("FAN-1", "LED-1", "DOOR-1", "DTH-1", "LIGHT-1", "DISTANCE-1");
 
