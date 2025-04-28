@@ -1,5 +1,6 @@
 package com.smartHome.service;
 
+import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -93,19 +94,29 @@ public class CommandService {
 
         // save to database
         FanCommand command = new FanCommand();
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
         command.setDevice(device);
         command.setUser(user);
-        command.setTimestamp(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+        command.setTimestamp(now);
         command.setSpeed(speed);
 
         if ("0".equals(speed)) {
+            if ("Off".equals(device.getStatus())) {
+                throw new RuntimeException("Fan is already off!");
+            }
+
             command.setStatus("Off");
             deviceService.handleUpdateDeviceStatus("FAN-1", "Off");
         }
 
         else if ("1".equals(speed) || "2".equals(speed) || "3".equals(speed)) {
+            if ("On".equals(device.getStatus())) {
+                throw new RuntimeException("Fan is already on!");
+            }
+
             command.setStatus("On");
             deviceService.handleUpdateDeviceStatus("FAN-1", "On");
+            deviceService.handleUpdateDeviceStartUsingTime("FAN-1", now);
         }
 
         fanCommandRepository.save(command);
@@ -137,16 +148,26 @@ public class CommandService {
 
         // save to database
         DoorCommand command = new DoorCommand();
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
         command.setDevice(device);
         command.setUser(user);
-        command.setTimestamp(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+        command.setTimestamp(now);
 
         if ("1".equals(status)) {
+            if ("Open".equals(device.getStatus())) {
+                throw new RuntimeException("Door is already open!");
+            }
+
             command.setStatus("Open");
             deviceService.handleUpdateDeviceStatus("DOOR-1", "Open");
+            deviceService.handleUpdateDeviceStartUsingTime("DOOR-1", now);
         }
 
         else if ("0".equals(status)) {
+            if ("Close".equals(device.getStatus())) {
+                throw new RuntimeException("Door is already close!");
+            }
+
             command.setStatus("Close");
             deviceService.handleUpdateDeviceStatus("DOOR-1", "Close");
         }
@@ -193,6 +214,11 @@ public class CommandService {
 
         // save to database
         LightCommand command = new LightCommand();
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        command.setDevice(device);
+        command.setUser(user);
+        command.setTimestamp(now);
+        command.setStatus(status);
 
         // if status is on in the first time, it will set default color is one
         // else it still keep the previous color
@@ -212,6 +238,8 @@ public class CommandService {
                 command.setColor(color);
                 mqttPublisherService.publishCommand(topic, color);
             }
+
+            deviceService.handleUpdateDeviceStartUsingTime("LED-1", now);
         }
 
         else if ("Off".equals(status)) {
@@ -222,11 +250,6 @@ public class CommandService {
             command.setColor(color);
             mqttPublisherService.publishCommand(topic, "#000000");
         }
-
-        command.setDevice(device);
-        command.setUser(user);
-        command.setTimestamp(ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")));
-        command.setStatus(status);
 
         deviceService.handleUpdateDeviceStatus("LED-1", status);
 
@@ -442,5 +465,57 @@ public class CommandService {
                 .findTopByDeviceOrderByTimestampDesc(device)
                 .map(Distance::getDistance)
                 .orElse(null);
+    }
+
+    // calculate power consumption
+    @Scheduled(fixedRate = 1000)
+    public void calculatePowerConsumption() {
+        List<String> deviceIds = List.of("FAN-1", "LED-1", "DOOR-1", "DTH-1", "LIGHT-1", "DISTANCE-1");
+
+        Map<String, Device> devices = deviceIds.stream()
+            .map(id -> deviceRepository.findByDeviceId(id)
+                .orElseThrow(() -> new RuntimeException("Device not found: " + id)))
+            .collect(Collectors.toMap(Device::getDeviceId, d -> d));
+
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+
+        for (Device device : devices.values()) {
+            String status = device.getStatus();
+            boolean isUsing = status.equals("On") || (device.getDeviceId().equals("DOOR-1") && status.equals("Open"));
+
+            if (isUsing && device.getStartUsingTime() != null) {
+                Duration duration = Duration.between(device.getStartUsingTime(), now);
+                double hours = duration.toMillis() / 3600000.0;
+
+                // Use double precision for power consumption
+                double powerConsumption = hours * device.getPower() * 1000;
+
+                device.setPowerConsume(powerConsumption);
+                deviceRepository.save(device);
+            }
+        }
+
+        double totalPowerConsumption = devices.values().stream()
+            .mapToDouble(Device::getPowerConsume)
+            .sum();
+
+        messagingTemplate.convertAndSend("/topic/power", Map.of(
+            "power", totalPowerConsumption
+        ));
+    }
+
+    // handle reset power consumption
+    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Ho_Chi_Minh")
+    public void handleResetPowerConsumption() {
+        List<String> deviceIds = List.of("FAN-1", "LED-1", "DOOR-1", "DTH-1", "LIGHT-1", "DISTANCE-1");
+
+        for (String deviceId : deviceIds) {
+            Device device = deviceRepository.findByDeviceId(deviceId)
+                .orElseThrow(() -> new RuntimeException("Device not found: " + deviceId));
+
+            device.setPowerConsume(0D);
+            device.setStartUsingTime(null);
+            deviceRepository.save(device);
+        }
     }
 }

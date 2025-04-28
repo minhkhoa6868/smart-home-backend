@@ -25,12 +25,17 @@ public class Device {
     @Column(columnDefinition = "NUMERIC(10,2)", nullable = false)
     private Long power;
 
+    @Column(precision = 10, scale = 2, nullable = false)
+    private Double powerConsume = 0D;
+
     @Column(nullable = false)
     private Boolean isAutoMode;
 
     private ZonedDateTime alertStartTime;
 
     private ZonedDateTime alertEndTime;
+
+    private ZonedDateTime startUsingTime;
 
     @ManyToMany(mappedBy = "hasDevices")
     private List<User> hasByUsers;

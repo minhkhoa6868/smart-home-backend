@@ -11,6 +11,8 @@ import com.smartHome.dto.DeviceDTO;
 import com.smartHome.model.Device;
 import com.smartHome.repository.DeviceRepository;
 
+import java.time.ZonedDateTime;
+
 @Service
 public class DeviceService {
     private final DeviceRepository deviceRepository;
@@ -65,13 +67,23 @@ public class DeviceService {
 
     // handle update device status
     public void handleUpdateDeviceStatus(String deviceId, String status) {
-        System.out.println(deviceId + status);
         // check if device exists
         Device existingDevice = deviceRepository.findByDeviceId(deviceId)
               .orElseThrow(() -> new RuntimeException("Device not found!"));
 
         // update device status
         existingDevice.setStatus(status);
+        deviceRepository.save(existingDevice);
+    }
+
+    // handle update device start using time
+    public void handleUpdateDeviceStartUsingTime(String deviceId, ZonedDateTime startUsingTime) {
+        // check if device exists
+        Device existingDevice = deviceRepository.findByDeviceId(deviceId)
+              .orElseThrow(() -> new RuntimeException("Device not found!"));
+
+        // update device start using time
+        existingDevice.setStartUsingTime(startUsingTime);
         deviceRepository.save(existingDevice);
     }
 
