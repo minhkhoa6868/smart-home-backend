@@ -26,7 +26,7 @@ public class Device {
     private Long power;
 
     @Column(columnDefinition = "NUMERIC(10,2)")
-    private Double powerConsume = 0D;
+    private Double powerConsume;
 
     @Column(nullable = false)
     private Boolean isAutoMode;

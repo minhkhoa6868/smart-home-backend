@@ -1,6 +1,9 @@
 package com.smartHome.service;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -41,6 +44,19 @@ public class MqttSubscriberService {
             }
     
             System.out.println("Starting subscriptions...");
+            List<String> deviceIds = List.of("DTH-1", "LIGHT-1", "DISTANCE-1");
+
+            Map<String, Device> devices = deviceIds.stream()
+            .map(id -> deviceRepository.findByDeviceId(id)
+                .orElseThrow(() -> new RuntimeException("Device not found: " + id)))
+            .collect(Collectors.toMap(Device::getDeviceId, d -> d));
+
+            ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+            
+            for (Device device : devices.values()) {
+                device.setStartUsingTime(now);
+            }
+            
             subscribe("itsmejoanro/feeds/bbc-distance");
             subscribe("itsmejoanro/feeds/bbc-temp");
             subscribe("itsmejoanro/feeds/bbc-humid");

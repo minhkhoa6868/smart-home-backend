@@ -488,7 +488,7 @@ public class CommandService {
                 double hours = duration.toMillis() / 3600000.0;
 
                 // Use double precision for power consumption
-                double powerConsumption = hours * device.getPower() * 1000;
+                double powerConsumption = hours * device.getPower() / 1000;
 
                 device.setPowerConsume(powerConsumption);
                 deviceRepository.save(device);
