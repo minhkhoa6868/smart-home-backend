@@ -25,7 +25,7 @@ public class Device {
     @Column(columnDefinition = "NUMERIC(10,2)", nullable = false)
     private Long power;
 
-    @Column(precision = 10, scale = 2, nullable = false)
+    @Column(precision = 10, scale = 2)
     private Double powerConsume = 0D;
 
     @Column(nullable = false)
