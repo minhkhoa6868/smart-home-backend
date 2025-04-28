@@ -483,10 +483,25 @@ public class CommandService {
                 Duration duration = Duration.between(device.getStartUsingTime(), now);
                 double hours = duration.toMillis() / 3600000.0;
 
+                Double timeUsed = device.getTimeUsed() + hours;
+
                 // Use double precision for power consumption
-                double powerConsumption = hours * device.getPower() / 1000;
+                double powerConsumption = timeUsed * device.getPower() / 1000;
 
                 device.setPowerConsume(powerConsumption);
+                deviceRepository.save(device);
+            }
+            else if (!isUsing && device.getStartUsingTime() != null) {
+                Duration duration = Duration.between(device.getStartUsingTime(), now);
+                double hours = duration.toMillis() / 3600000.0;
+
+                Double timeUsed = device.getTimeUsed() + hours;
+
+                double powerConsumption = timeUsed * device.getPower() / 1000;
+
+                device.setPowerConsume(powerConsumption);
+                device.setTimeUsed(timeUsed);
+                device.setStartUsingTime(null);
                 deviceRepository.save(device);
             }
         }

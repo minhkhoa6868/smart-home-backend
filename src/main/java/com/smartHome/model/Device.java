@@ -37,6 +37,8 @@ public class Device {
 
     private ZonedDateTime startUsingTime;
 
+    private Double timeUsed;
+
     @ManyToMany(mappedBy = "hasDevices")
     private List<User> hasByUsers;
 
