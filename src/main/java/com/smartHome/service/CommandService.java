@@ -499,6 +499,8 @@ public class CommandService {
             .mapToDouble(Device::getPowerConsume)
             .sum();
 
+        totalPowerConsumption = Math.round(totalPowerConsumption * 100.0) / 100.0;
+
         messagingTemplate.convertAndSend("/topic/power", Map.of(
             "power", totalPowerConsumption
         ));

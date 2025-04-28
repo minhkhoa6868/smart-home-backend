@@ -52,9 +52,10 @@ public class MqttSubscriberService {
             .collect(Collectors.toMap(Device::getDeviceId, d -> d));
 
             ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
-            
+
             for (Device device : devices.values()) {
                 device.setStartUsingTime(now);
+                deviceRepository.save(device);
             }
             
             subscribe("itsmejoanro/feeds/bbc-distance");
