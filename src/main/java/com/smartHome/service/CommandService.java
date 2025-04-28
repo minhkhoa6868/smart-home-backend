@@ -110,10 +110,6 @@ public class CommandService {
         }
 
         else if ("1".equals(speed) || "2".equals(speed) || "3".equals(speed)) {
-            if ("On".equals(device.getStatus())) {
-                throw new RuntimeException("Fan is already on!");
-            }
-
             command.setStatus("On");
             deviceService.handleUpdateDeviceStatus("FAN-1", "On");
             deviceService.handleUpdateDeviceStartUsingTime("FAN-1", now);
