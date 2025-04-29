@@ -32,6 +32,8 @@ import com.smartHome.repository.FanCommandRepository;
 import com.smartHome.repository.LightCommandRepository;
 import com.smartHome.repository.UserRepository;
 
+import jakarta.annotation.PreDestroy;
+
 @Service
 public class CommandService {
     private final MqttPublisherService mqttPublisherService;
@@ -413,7 +415,7 @@ public class CommandService {
     }
 
     // handle alert by distance
-    @Scheduled(fixedRate = 30000)
+    @Scheduled(fixedRate = 20000)
     public void handleAlert() {
         Device sensor = deviceRepository.findByDeviceId("DISTANCE-1")
             .orElseThrow(() -> new RuntimeException("Device not found!"));
@@ -450,7 +452,7 @@ public class CommandService {
 
         Float distance = getLatestDistance(sensor);
 
-        if (distance <= tempDistance) {
+        if (distance <= tempDistance && distance <= 30) {
             messagingTemplate.convertAndSend("/topic/alert", Map.of(
                 "alert", true,
                 "message", "Something strange"
@@ -538,6 +540,38 @@ public class CommandService {
             device.setPowerConsume(0D);
             device.setStartUsingTime(midnight);
             deviceRepository.save(device);
+        }
+    }
+
+    @PreDestroy
+    public void onShutdown() {
+        System.out.println("Shutting down. Saving active device usage time...");
+
+        List<String> deviceIds = List.of("DTH-1", "LIGHT-1", "DISTANCE-1");
+
+        Map<String, Device> devices = deviceIds.stream()
+            .map(id -> deviceRepository.findByDeviceId(id)
+                .orElseThrow(() -> new RuntimeException("Device not found: " + id)))
+            .collect(Collectors.toMap(Device::getDeviceId, d -> d));
+
+        ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+
+        for (Device device : devices.values()) {
+            if (device.getStartUsingTime() != null) {
+                Duration duration = Duration.between(device.getStartUsingTime(), now);
+                double hours = duration.toMillis() / 3600000.0;
+
+                double updatedTimeUsed = device.getTimeUsed() + hours;
+                double powerConsumption = updatedTimeUsed * device.getPower() / 1000;
+
+                device.setTimeUsed(updatedTimeUsed);
+                device.setPowerConsume(powerConsumption);
+                device.setStartUsingTime(now); // update for accurate resume after boot
+
+                deviceRepository.save(device);
+
+                System.out.printf("Saved %s: timeUsed=%.4f, power=%.4f%n", device.getDeviceId(), updatedTimeUsed, powerConsumption);
+            }
         }
     }
 }

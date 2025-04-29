@@ -11,19 +11,22 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
+import io.github.cdimascio.dotenv.Dotenv;
+
 @EnableScheduling
 @SpringBootApplication
 public class SmartHomeApplication {
 	@Bean(destroyMethod = "disconnect")
 	public IMqttClient mqttClient() throws MqttException {
+		Dotenv dotenv = Dotenv.load();
 		String publisherId = UUID.randomUUID().toString();
 		String broker = "ssl://io.adafruit.com:8883";
 
 		IMqttClient client = new MqttClient(broker, publisherId);
 
 		MqttConnectOptions options = new MqttConnectOptions();
-		options.setUserName(System.getenv("ADAFRUIT_USERNAME"));
-		options.setPassword(System.getenv("ADAFRUIT_IO_KEY").toCharArray());
+		options.setUserName(dotenv.get("ADAFRUIT_USERNAME"));
+		options.setPassword(dotenv.get("ADAFRUIT_IO_KEY").toCharArray());
 		options.setCleanSession(true);
 
 		System.out.println("Is connected? " + client.isConnected());
